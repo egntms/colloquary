@@ -117,7 +117,10 @@
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.53.0'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.54.0'; /* shown in the footer + the diagnostic report — bump per release */
+  /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
+     the served file IS the source (unminified), so "read it yourself" is a real invitation. */
+  var SRC_URL = 'https://github.com/egntms/colloquary';
   var INDEX_VERSION = 2; /* bump whenever index options or doc selection change — invalidates the cache */
 
   /* strip diacritics so `sapa` finds `Șapa`; 1:1 char mapping keeps positions aligned */
@@ -3037,6 +3040,7 @@
       return p[0] === cur ? '<span>' + p[1] + '</span>' : '<a href="#" data-pg="' + p[0] + '">' + p[1] + '</a>';
     });
     out.push('<a href="mailto:hello@colloquary.com">feedback</a>');
+    out.push('<a href="' + SRC_URL + '" target="_blank" rel="noopener">source</a>');
     out.push('<span>v' + APP_VERSION + '</span>');
     return '<p class="pglinks">' + out.join(' · ') + '</p>';
   }
@@ -3205,6 +3209,8 @@
       '<p>Your conversations with AI are becoming what your photo library already is: years of accumulated thinking. The official exports are zips you can\u2019t practically open, and the chat apps let you scroll history, not use it. colloquary\u2019s bet is that the value isn\u2019t storage \u2014 it\u2019s turning what those chats contain (how you decide, correct, phrase, ship) into capability you can install back into the AI.</p>');
     h.push('<h3>Local-first, honestly</h3>' +
       '<p>\u201CPrivate\u201D here is an architecture, not a promise: the app makes no network requests after the page loads. There is no upload path in the code. The optional semantic model is served from this same domain and runs on your device. Details: <a href="#" id="ab-privacy">privacy</a>.</p>');
+    h.push('<h3>Open source \u2014 so you can check</h3>' +
+      '<p>A privacy tool you cannot read is just a promise. The page you are using <em>is</em> the source: one HTML file, unminified \u2014 hit View Source and read it. The same code lives at <a href="' + SRC_URL + '" target="_blank" rel="noopener">github.com/egntms/colloquary</a> (AGPL-3.0), where you can also download the file and run it offline from your own disk.</p>');
     h.push('<h3>Who</h3>' +
       '<p>Built by Eugen \u2014 an independent, one-person project. Write me: <a href="mailto:hello@colloquary.com">hello@colloquary.com</a>.</p>');
     h.push('<h3>Feedback & diagnostics</h3>' +
@@ -3235,6 +3241,13 @@
       '<p>colloquary collects no personal data. Your imported conversations are processed solely on your device, under your control. To erase everything: <strong>Clear data</strong> (or clear this site\u2019s storage in your browser settings). Questions: <a href="mailto:hello@colloquary.com">hello@colloquary.com</a>.</p>');
     h.push('<h3>Third parties</h3>' +
       '<p>None. No CDNs, no external fonts, no analytics providers, no ad networks. Everything loads from colloquary.com.</p>');
+    h.push('<h3>Don’t trust me — check</h3>' +
+      '<p>Every claim above is verifiable in about a minute, and that is the point of shipping the code readable:</p>' +
+      '<ol>' +
+      '<li><strong>Read it.</strong> View Source on this page. The file you were served is the whole app, unminified — the same code as <a href="' + SRC_URL + '" target="_blank" rel="noopener">github.com/egntms/colloquary</a> (AGPL-3.0).</li>' +
+      '<li><strong>Watch the network.</strong> Open DevTools → Network, then import your export, search, compile a skill. Nothing goes out.</li>' +
+      '<li><strong>Pull the plug.</strong> Go offline and use it. It all still works. (Only the optional semantic model needs one download, once.)</li>' +
+      '</ol>');
     h.push(pageLinksHtml('privacy'));
     openPage('Privacy', 'no uploads \u00B7 no analytics \u00B7 no cookies', h.join(''));
     wirePageLinks();
@@ -3267,7 +3280,8 @@
       '<li><strong>How do I delete everything?</strong> Top bar \u2192 <strong>Clear data</strong> \u2014 wipes the archive AND semantic vectors from this browser. Your exports and accounts are untouched.</li>' +
       '<li><strong>Does it work offline?</strong> Yes, after first load.</li>' +
       '<li><strong>Can I use it on my phone?</strong> Yes: <strong>Download archive</strong> \u2192 one .zip \u2192 open colloquary on the phone and drop it there. For semantic on the phone: embed on desktop \u2192 <strong>Download embeddings</strong> (.cvec) \u2192 <strong>Import embeddings</strong> on the phone. Use an <strong>e5</strong> .cvec \u2014 e5 (~118 MB model) is the one that runs on phones (Gemma\u2019s model doesn\u2019t load on iOS today; the app says so and offers the way back).</li>' +
-      '<li><strong>Why is the semantic download large (~120\u2013240 MB)?</strong> That IS the AI model, served from this domain and run on your device \u2014 the price of nothing leaving your browser. One-time.</li></ul>');
+      '<li><strong>Why is the semantic download large (~120\u2013240 MB)?</strong> That IS the AI model, served from this domain and run on your device \u2014 the price of nothing leaving your browser. One-time.</li>' +
+      '<li><strong>Is it open source? Can I verify any of this?</strong> Yes, and please do \u2014 that\u2019s why the code ships readable. The page you\u2019re on <em>is</em> the source (one unminified HTML file: View Source). Same code at <a href="' + SRC_URL + '" target="_blank" rel="noopener">github.com/egntms/colloquary</a> (AGPL-3.0). Two more checks: DevTools \u2192 Network while you use it (nothing goes out), or just go offline and keep working.</li></ul>');
     h.push('<h3>Skills & compile</h3><ul>' +
       '<li><strong>What is a me.skill?</strong> A file distilled from your own messages \u2014 your rituals, corrections, decision patterns \u2014 that you install in Claude (Settings \u2192 Capabilities) so every future session knows how you work.</li>' +
       '<li><strong>What can Compile make?</strong> A brief on any topic (<strong>Compile a topic</strong>), an installable topic-scoped skill (<strong>Compile a skill</strong>: coding / design / writing / any phrase — or merge 2–3 with “+”, e.g. <code>coding + design</code>), or a ranked list of what YOUR archive supports (<strong>Suggest skills</strong>).</li>' +

@@ -34,6 +34,8 @@ A privacy tool you can't read is just a promise. This one you can check in about
   on Y?" — answered by a local query router, not an LLM.
 - **Stats & entities** — your activity over time, and the domains / IPs / repos / paths that make up
   your technical footprint, each with a timeline.
+- **Token coach** — what your conversations actually cost in context: where the long chats are, which
+  ones bloat, and where you'd have been better off starting fresh.
 - **Semantic search (opt-in)** — on-device embeddings (E5 or EmbeddingGemma via transformers.js /
   ONNX Runtime Web) fold meaning-matches into keyword results. The model downloads once from this
   site's own webroot; after that it's local too.
