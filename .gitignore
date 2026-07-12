@@ -1,0 +1,6 @@
+node_modules/
+conversations.json
+*.zip
+samples/
+zip chats archives/
+*.cvec

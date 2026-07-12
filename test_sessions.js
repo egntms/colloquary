@@ -1,0 +1,197 @@
+// Session-adapter test: normalize Claude Code / Cowork JSONL transcripts -> conversation records.
+// Needs local samples/ (gitignored, private): main_local_*.jsonl + main_local_*.meta.json pairs,
+// plus optionally a subagent transcript (local_*.jsonl) that must be rejected.
+const fs = require('fs');
+const path = require('path');
+
+// worker.js declares plain functions; eval in non-strict scope makes them callable here.
+// `self`/`fflate` are only touched inside onmessage, which we never invoke.
+var self = {};
+eval(fs.readFileSync(path.join(__dirname, 'worker.js'), 'utf8'));
+
+const dir = path.join(__dirname, 'samples');
+if (!fs.existsSync(dir)) { console.log('samples/ not found — copy a few session files first (see ENCYCLOPEDIA §11).'); process.exit(0); }
+
+let pass = 0, failCount = 0;
+function check(label, cond, extra) {
+  if (cond) { pass++; }
+  else { failCount++; console.error('FAIL:', label, extra === undefined ? '' : JSON.stringify(extra).slice(0, 200)); }
+}
+
+const mains = fs.readdirSync(dir).filter(f => /^main_.*\.jsonl$/.test(f));
+check('found main transcripts', mains.length > 0, mains.length);
+let totalRecovered = 0;
+
+for (const f of mains) {
+  const metaFile = path.join(dir, f.replace('.jsonl', '.meta.json'));
+  const meta = fs.existsSync(metaFile) ? JSON.parse(fs.readFileSync(metaFile, 'utf8')) : null;
+  const text = fs.readFileSync(path.join(dir, f), 'utf8');
+  const uuid = meta ? String(meta.cliSessionId).toLowerCase() : 'deadbeef-0000-0000-0000-000000000000';
+  const conv = normalizeSession(text, meta, uuid, '.claude/projects/-Users-eugen-test/' + uuid + '.jsonl');
+
+  check(f + ': produced a conversation', !!conv);
+  if (!conv) continue;
+  check(f + ': has docs', conv.docs.length > 0, conv.docs.length);
+  check(f + ': source is cowork', conv.source === 'cowork', conv.source);
+  check(f + ': title from meta', conv.name === meta.title, conv.name);
+  check(f + ': ISO dates', /^\d{4}-\d{2}-\d{2}T/.test(conv.created_at) && conv.updated_at >= conv.created_at,
+    [conv.created_at, conv.updated_at]);
+  /* SCHEMA=3: doc.d = local 'YYYY-MM-DDTHH:MM' (these samples all carry timestamps) */
+  check(f + ': every doc dated + non-empty', conv.docs.every(d => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(d.d) && d.t.length > 0));
+  check(f + ': both senders present', conv.docs.some(d => d.s === 'h') && conv.docs.some(d => d.s === 'a'));
+  const expFolder = (meta.userSelectedFolders || [])[0];
+  const expProject = expFolder ? String(expFolder).replace(/\/+$/, '').split('/').pop() : '';
+  check(f + ': project = folder basename', conv.project === expProject, [conv.project, expProject]);
+  // residue check scopes to DIALOGUE docs — recovered file text (ty:'a') may legitimately
+  // contain these strings (e.g. code that mentions tool_use_id)
+  const joined = conv.docs.filter(d => d.ty !== 'a').map(d => d.t).join('\n');
+  for (const bad of ['<scheduled-task', '<system-reminder>', '<uploaded_files>', '<command-name>', '"tool_use_id"']) {
+    check(f + ': no ' + bad + ' residue', joined.indexOf(bad) < 0);
+  }
+  // merged assistant streams: no doc should be a tiny fragment ending mid-word next to same-sender doc chains
+  const hDocs = conv.docs.filter(d => d.s === 'h').length;
+  totalRecovered += conv.docs.filter(d => d.ty === 'a').length;
+  console.log(' ', f.slice(0, 46), '->', conv.docs.length, 'docs (', hDocs, 'human ) |', conv.name.slice(0, 40),
+    '| files:', conv.fileNames.length, '| recovered:', conv.docs.filter(d => d.ty === 'a').length);
+}
+// B2 on real samples: at least one main transcript Read/Writes allowlisted repo files
+check('b2: real samples yield recovered files', totalRecovered > 0, totalRecovered);
+
+// a subagent-only transcript must be rejected (all lines isSidechain)
+const side = fs.readdirSync(dir).filter(f => /^local_.*\.jsonl$/.test(f));
+for (const f of side) {
+  const text = fs.readFileSync(path.join(dir, f), 'utf8');
+  const onlySide = text.split('\n').filter(Boolean).every(l => {
+    try { const o = JSON.parse(l); return o.isSidechain || (o.type !== 'user' && o.type !== 'assistant'); }
+    catch (e) { return true; }
+  });
+  if (!onlySide) continue;
+  const conv = normalizeSession(text, null, 'x', f);
+  check(f + ': sidechain-only transcript rejected', conv === null, conv && conv.docs.length);
+}
+
+// cleanUserText unit checks
+const cu1 = cleanUserText('<scheduled-task name="x" file="/y">\nDo the check now\n</scheduled-task>');
+check('scheduled-task wrapper stripped, prompt kept', cu1.t === 'Do the check now', cu1.t);
+const cu2 = cleanUserText('look at this <uploaded_files>\n<file><file_path>/a/b/12345678-1234-1234-1234-123456789abc-1780000000000_plan.pdf</file_path></file>\n</uploaded_files> please');
+check('uploaded_files harvested', cu2.files.length === 1 && cu2.files[0] === 'plan.pdf', cu2.files);
+check('uploaded_files stripped from text', cu2.t === 'look at this please', cu2.t);
+const cu3 = cleanUserText('Caveat: the messages below were generated by the user while running local commands. yes');
+check('caveat turn dropped', cu3.t === '');
+const cu4 = cleanUserText('before <system-reminder>noise</system-reminder> after');
+check('system-reminder stripped', cu4.t === 'before after', cu4.t);
+
+// deriveSessionName for meta-less (Claude Code) transcripts
+const dn = deriveSessionName('projects/-Users-eugen-fits/abc.jsonl', 'hi, lets resume fits and check the queue');
+check('code-mode name derived', /^fits: hi, lets resume/.test(dn), dn);
+
+// deriveProject: cowork basename (incl. spaces + trailing slash), code-mode munged tail
+check('project from cowork folder', deriveProject({ userSelectedFolders: ['/Users/eugen/Downloads/site logs/'] }, 'x') === 'site logs',
+  deriveProject({ userSelectedFolders: ['/Users/eugen/Downloads/site logs/'] }, 'x'));
+check('project empty when no folder', deriveProject({ userSelectedFolders: [] }, 'x') === '');
+check('project from code cwd tail', deriveProject(null, 'projects/-Users-eugen-fits/abc.jsonl') === 'fits');
+
+// ---- v1.21.0: session payload files (outputs/uploads text) — synthetic end-to-end ----
+// isPayloadPath gating (path level)
+check('payload: outputs md accepted', isPayloadPath('s/p/local_ab-1/outputs/report.md'));
+check('payload: uploads txt accepted', isPayloadPath('s/p/local_ab-1/uploads/x.txt'));
+check('payload: nested outputs dir accepted', isPayloadPath('s/p/local_ab-1/outputs/sub/dir/x.py'));
+check('payload: outside outputs/uploads rejected', !isPayloadPath('s/p/local_ab-1/other/x.md'));
+check('payload: png rejected', !isPayloadPath('s/p/local_ab-1/outputs/pic.png'));
+check('payload: office-unpack guts rejected', !isPayloadPath('s/p/local_ab-1/outputs/unpacked_2026/word/document.xml'));
+check('payload: node_modules rejected', !isPayloadPath('s/p/local_ab-1/outputs/node_modules/x.js'));
+check('payload: extension-less accepted for sniffing', isPayloadPath('s/p/local_ab-1/outputs/README'));
+check('payload: dotfile rejected', !isPayloadPath('s/p/local_ab-1/outputs/.env'));
+
+// ---- v1.21.0 B2: repo-file text recovered from tool_use/tool_result pairs (synthetic) ----
+const L = (o) => JSON.stringify(o);
+const b2jsonl = [
+  L({ type: 'user', timestamp: '2026-07-02T09:00:00.000Z', message: { content: 'read and fix my script' } }),
+  L({ type: 'assistant', timestamp: '2026-07-02T09:00:10.000Z', message: { id: 'a1', model: 'claude-opus-4-8', content: [
+    { type: 'text', text: 'Reading it.' },
+    { type: 'tool_use', id: 'r1', name: 'Read', input: { file_path: '/Users/x/repo/main.py' } },
+    { type: 'tool_use', id: 'r2', name: 'Read', input: { file_path: '/Users/x/repo/pic.png' } },
+    { type: 'tool_use', id: 'r3', name: 'Read', input: { file_path: '/Users/x/proj/outputs/echo.md' } },
+    { type: 'tool_use', id: 'e1', name: 'Edit', input: { file_path: '/Users/x/repo/main.py', old_string: 'a', new_string: 'b' } }
+  ] } }),
+  L({ type: 'user', timestamp: '2026-07-02T09:01:00.000Z', message: { content: [
+    { type: 'tool_result', tool_use_id: 'r1', content: '     1\timport os\n     2\tprint(1)' },
+    { type: 'tool_result', tool_use_id: 'r2', content: [{ type: 'image', source: {} }] },
+    { type: 'tool_result', tool_use_id: 'r3', content: '     1\techo' },
+    { type: 'tool_result', tool_use_id: 'e1', content: 'ok' }
+  ] } }),
+  L({ type: 'assistant', timestamp: '2026-07-02T09:02:00.000Z', message: { id: 'a2', model: '<synthetic>', content: [
+    { type: 'text', text: 'Now writing the doc + re-reading.' },
+    { type: 'tool_use', id: 'w1', name: 'Write', input: { file_path: '/Users/x/repo/gen.md', content: '# Gen\ndoc body' } },
+    { type: 'tool_use', id: 'r4', name: 'Read', input: { file_path: '/Users/x/repo/main.py' } },
+    { type: 'tool_use', id: 'r5', name: 'Read', input: { file_path: '/Users/x/repo/broken.md' } },
+    { type: 'tool_use', id: 'w2', name: 'Write', input: { file_path: '/Users/x/other/notes.md', content: 'second write' } },
+    { type: 'tool_use', id: 'w3', name: 'Write', input: { file_path: '/Users/x/repo2/nested/gen.md', content: 'other gen' } }
+  ] } }),
+  L({ type: 'user', timestamp: '2026-07-02T09:03:00.000Z', message: { content: [
+    { type: 'tool_result', tool_use_id: 'w1', content: 'File created successfully at /Users/x/repo/gen.md' },
+    { type: 'tool_result', tool_use_id: 'r4', content: '     1\timport sys\n     2\tprint(2)\n<system-reminder>whole file shown</system-reminder>' },
+    { type: 'tool_result', tool_use_id: 'r5', is_error: true, content: 'File does not exist.' },
+    { type: 'tool_result', tool_use_id: 'w2', content: 'File created successfully' },
+    { type: 'tool_result', tool_use_id: 'w3', content: 'File created successfully' }
+  ] } }),
+  L({ type: 'assistant', timestamp: '2026-07-02T09:04:00.000Z', message: { id: 'a3', model: 'claude-opus-4-8', content: [{ type: 'text', text: 'done.' }] } })
+].join('\n');
+const b2conv = normalizeSession(b2jsonl, null, 'b2b2b2b2-0000-0000-0000-000000000000', 'projects/-Users-x-repo/b2.jsonl');
+check('b2: conv built', !!b2conv);
+const caps = b2conv ? b2conv.docs.filter(d => d.ty === 'a') : [];
+// expected: main.py (latest read), repo/gen.md + nested/gen.md (collision-hinted), notes.md — png/outputs/error/Edit skipped
+check('b2: four captures, junk skipped', caps.length === 4, caps.map(d => d.fn));
+const mainpy = caps.find(d => d.fn === 'main.py');
+check('b2: latest read wins + line numbers stripped', mainpy && mainpy.t === 'import sys\nprint(2)' && mainpy.s === 'h', mainpy && mainpy.t);
+check('b2: system-reminder stripped from read', mainpy && mainpy.t.indexOf('system-reminder') === -1);
+const gens = caps.filter(d => /gen\.md$/.test(d.fn)).map(d => d.fn).sort();
+check('b2: basename collision gets dir hint', gens.length === 2 && gens[0] === 'nested/gen.md' && gens[1] === 'repo/gen.md', gens);
+const wcap = caps.find(d => d.fn === 'repo/gen.md');
+check('b2: write captured as Claude\'s (s:a)', wcap && wcap.s === 'a' && wcap.t === '# Gen\ndoc body', wcap);
+check('b2: msgCount = dialogue only', b2conv && b2conv.msgCount === b2conv.docs.length - caps.length, b2conv && [b2conv.msgCount, b2conv.docs.length]);
+check('b2: capture dates are local minutes of the result line', caps.every(d => /^2026-07-02T\d{2}:\d{2}$/.test(d.d)), caps.map(d => d.d));
+check('b2: fileNames carry captures', b2conv && caps.every(d => b2conv.fileNames.indexOf(d.fn) >= 0), b2conv && b2conv.fileNames);
+check('b2: models = distinct message.model, <synthetic> skipped', b2conv && JSON.stringify(b2conv.models) === JSON.stringify(['claude-opus-4-8']), b2conv && b2conv.models);
+
+// importSessions end-to-end with fake File objects
+function fakeFile(name, content, opts) {
+  opts = opts || {};
+  return { name: name, size: 'size' in opts ? opts.size : Buffer.byteLength(content, 'utf8'),
+    lastModified: opts.mtime || 1783000000000,
+    text: function () { return Promise.resolve(content); } };
+}
+const CLI = 'aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000';
+const jsonl = [
+  JSON.stringify({ type: 'user', timestamp: '2026-07-01T10:00:00.000Z', message: { content: 'hello there, build the report' } }),
+  JSON.stringify({ type: 'assistant', timestamp: '2026-07-01T10:01:00.000Z', message: { id: 'm1', content: [{ type: 'text', text: 'built it.' }] } })
+].join('\n');
+const meta = JSON.stringify({ cliSessionId: CLI, title: 'Payload test session', createdAt: 1782900000000, lastActivityAt: 1783000000000 });
+const entries = [
+  { path: 'space/proj/local_e1-aa.json', file: fakeFile('local_e1-aa.json', meta) },
+  { path: 'space/proj/local_e1-aa/.claude/projects/-Users-x-y/' + CLI + '.jsonl', file: fakeFile(CLI + '.jsonl', jsonl) },
+  { path: 'space/proj/local_e1-aa/outputs/report.md', file: fakeFile('report.md', '# Report\nfindings here') },
+  { path: 'space/proj/local_e1-aa/uploads/12345678-1234-1234-1234-123456789abc-1780000000000_notes.txt', file: fakeFile('notes.txt', 'my notes') },
+  { path: 'space/proj/local_e1-aa/outputs/report.md', file: fakeFile('report.md', '# Report\nfindings here') }, // duplicate name+size -> once
+  { path: 'space/proj/local_e1-aa/outputs/huge.json', file: fakeFile('huge.json', '{}', { size: 500 * 1024 }) }, // over per-file cap
+  { path: 'space/proj/local_e1-aa/outputs/binary-sniffed', file: fakeFile('binary-sniffed', 'PK\u0000\u0000zipdata') }, // NUL -> skipped
+  { path: 'space/proj/local_0000-77/outputs/lost.md', file: fakeFile('lost.md', 'no meta dir') } // unmapped session dir
+];
+importSessions(entries, function () {}, function (msg) {
+  check('payload e2e: import must not fail', false, msg);
+  console.log('\n' + pass + ' passed, ' + failCount + ' failed');
+  process.exit(1);
+}, function (convs, skipped, files) {
+  check('payload e2e: one conv', convs.length === 1, convs.length);
+  const c = convs[0];
+  const att = c.docs.filter(d => d.ty === 'a');
+  check('payload e2e: 2 files attached (dedupe, caps, sniff, orphan all skipped)', files === 2 && att.length === 2, [files, att.length]);
+  const md = att.find(d => d.fn === 'report.md'), tx = att.find(d => d.fn === 'notes.txt');
+  check('payload e2e: outputs file is Claude\'s (s:a) with content', md && md.s === 'a' && md.t.indexOf('findings') > 0, md);
+  check('payload e2e: upload prefix stripped, user\'s (s:h)', tx && tx.s === 'h' && tx.t === 'my notes', tx);
+  check('payload e2e: doc dates are local minutes', att.every(d => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(d.d)), att.map(d => d.d));
+  check('payload e2e: fileNames carry both', c.fileNames.indexOf('report.md') >= 0 && c.fileNames.indexOf('notes.txt') >= 0, c.fileNames);
+  check('payload e2e: dialogue docs untouched first', c.docs[0].s === 'h' && !c.docs[0].ty, c.docs[0]);
+  console.log('\n' + pass + ' passed, ' + failCount + ' failed');
+  process.exit(failCount ? 1 : 0);
+});

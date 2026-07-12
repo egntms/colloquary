@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>colloquary — search your Claude &amp; ChatGPT chats, turn them into skills — 100% local</title>
+<meta name="description" content="Browse and search your Claude & ChatGPT chats (plus Claude Code / Cowork sessions) — messages, attachments and project files. Ask questions about your history, see your stats — and turn your chats into reusable skills. All local, in this browser; nothing is uploaded.">
+<link rel="canonical" href="https://colloquary.com/">
+<meta property="og:title" content="colloquary — search your Claude & ChatGPT chats, turn them into skills">
+<meta property="og:description" content="A private, searchable library of your AI conversations: browse and full-text search chats AND attached files, ask questions about your history, see your stats — and compile your chats into reusable skills. Everything stays in this browser; nothing is uploaded.">
+<meta property="og:url" content="https://colloquary.com">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://colloquary.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://colloquary.com/og.png">
+<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAE4klEQVR4nLWXTWxUVRTH/+e++968zkdbqMQUQvkq0JYSShj8imITw1KJkhgXNpKwMLrQnYlGZaMLV7KShQkREzVpXOBCJRZTlUQTKUFwGkwZka9AodDOR2fevI97j4uZFgIz814ncF7e6uXc/+/ec+7/vkuoBTMTABARHzhwQIzsHxkwLbO7VMhDgQgthAFmO2ZTRQfF8u3ymXQ6Xa5pCSLSACAXxImIASB7KbuvzbLekqbZb5mWnbTjrWgvBhHBdV3uTLT/d/naxSOXL1z9lIiKCxC0MPPJycll7csSh7q7V74MDXieB62ZiQBwq+rVXCIiaUpYpo3pW9dO37g5s39oy9BpZhY0Pj4uh4eHdfby1Ghvz6a9pXLR01rLKjwRg0FoqQJYyGVmAGBBwk8kktbV61cuFnOldCaTyREA/HNhcqR37cYvK07FY2arxflGDPKSiaSVvXT+8Ma1m/fTxMSEuXxFx6nVq3oGHcdhIhIPU57BbEqTZ3Oz3szs7W3CTJh98Xhik+/5eNjiAEAgCvwAnR2dth2zdksStNqyrJjWum6rMXhJTUgRdiwRsZSSpYF1EgS/1iT3hdIapiEhDIoEwQC8wIcgigJCrMmX1MRkOuJJ3Crm4PrVQZszMIgI3R1dcHwXgVLhEASSdYdiRsy0cPDYKI6cOAZfqdpWbIRQFdKs8dyWHfjwxX1IxGKRIO4DUFoj1RbH8cwpfPDtYaTsNggS1V4ICYMMHDp+FN2dy/HunhHkS0UYZCwNgMEQ0sTJC+dgCIF2OwFP+VVDCQGQhkBXqh1/Zs9BRylBPQBBAr7r4vntT+GzsaOYLszCFAY0uKEfMgCqPUW3jL2PD4OEAa5+WCoAoeK76F+1Bl+9+T4O//oDyp4LIQTQYLcsmL5mxp4dT+Olnc+iVCnDEOG2UrcJiQgVz8Ou/iEMD2yH0jr0NOBaniCB+Uo5VLgpwALEvFNeHLiqwoBWoSDG3YYqCGhisA0BAFSXfXFkBkwTbHegWWHv3azkVQDPRSO7aQpwrzjl52AeGwU5JSBCfQEg2LELuqe3IUQ4ADMgJaiQQ9tHb0BcygKGgXBvJoAZ1ndfwHnnIILBnXXBwwG0BtsJWN9/DXHlX+CRRwEVhKYBAIQBFOZg/fgNgq2P1a1cxBJocPuyagMGARD1hCQN+C441Vld/jq+EA5gGCCnBP/J3TD++h3y5C+RmEEANEP3DsJ94TVQ4NfvAW7sLndCa8AwUHn7YxjnM0Cl3HRr3Q2hegcBy67fhAyWrFmGH5sEKAUohWDztmjiC6muA/he3dkTkZSKVT4IgiAmY0ajH5NFCADkRHc5ADUjul9caQWleU4IV5wplUrTpmUyAB0+oFjaW6f1iYgKhTw7FfdnMTQ0VPK1+tyUMcGM5j77AIKZg3g8IUrl8vjU5NQEjY6OGuvXr0+u6O460bNyzdb50rzHrE2Kcpi3IG7btswVcs5sLvdE34a+vwUApNPpfL5YfHX61vVsMpG0pJQEQBNIPZCXSBGIU8mULJaK8zMzM6/3beg7y8yCamSCiPTY2FjXpv7eT2Ix65VUsj1hmiaaNmaEICIopVAoFrRm/dONmzPv1e6FRhXszvIsXpkzU5mBVDL+DEGsdSoORIuXQ60By7TAxHMq8H7buG7gj5qWQUQKAP4HJCJAM7QQN+0AAAAASUVORK5CYII=">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='1' y='1' width='62' height='62' rx='13' fill='%23F3F4F1' stroke='%23DCE0DA' stroke-width='2'/%3E%3Crect x='15' y='23' width='28' height='9' rx='4.5' fill='%231E6B50'/%3E%3Crect x='22' y='37' width='28' height='9' rx='4.5' fill='%23ff5c39'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root {
+  --paper: #F3F4F1;
+  --card: #FBFBF9;
+  --ink: #1C231F;
+  --muted: #737C75;
+  --ledger: #1E6B50;
+  --mark: #FFE9A0;
+  --hair: #DCE0DA;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --mono: "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--paper); }
+#topwrap { position: sticky; top: 0; z-index: 36; }
+#topbar { height: 17px; background: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+#topbar .tdot { width: 7px; height: 7px; border-radius: 50%; background: #ff5c39; transition: transform .2s; }
+#topbar:hover .tdot { transform: scale(1.35); }
+#topwrap.open #topbar .tdot { transform: scale(1.35); }
+/* v1.45.8 — the menu is grouped by function into labeled rows (Eugen's pick). Desktop: right-aligned
+   label gutter so every group's chips share one left edge. Mobile: label above a 2-col grid of
+   full-width chips (equal sizes, no ragged empty space; a lone odd chip spans both columns). */
+#topnav { display: none; flex-direction: column; gap: .45rem; padding: .55rem .9rem; background: var(--paper); border-bottom: 1px solid var(--ink); }
+#topwrap.open #topnav { display: flex; }
+.tng { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+.tng-lab { font-family: var(--mono); font-size: .68rem; color: var(--muted); flex: 0 0 4.6rem; text-align: right; }
+.tng-chips { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; flex: 1; }
+.tnav { font-family: var(--mono); font-size: .74rem; padding: .34rem .7rem; border: 1px solid var(--hair); border-radius: 2px; background: var(--card); color: var(--ink); cursor: pointer; }
+.tnav:hover { border-color: var(--ledger); color: var(--ledger); }
+.tnav.danger { margin-left: auto; color: #8a3535; }
+.tnav.danger:hover { border-color: #8a3535; color: #8a3535; }
+@media print { #topwrap { display: none; } }
+body { font-family: var(--sans); color: var(--ink); min-height: 100vh; }
+body.drag::after {
+  content: "Drop your export to import";
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(30,107,80,.92); color: #fff; font-family: var(--serif); font-size: 1.8rem; z-index: 50;
+}
+.wrap { max-width: 780px; margin: 0 auto; padding: .9rem 1.2rem 5rem; } /* top padding matches the ledger's .9rem below the header — equal space above/below the logo+tagline */
+
+header { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+/* v1.45.6 — the whole header (minus logo + links, which keep their own actions) opens the top-bar
+   menu — one big tap target, mainly for mobile */
+#page-head { cursor: pointer; }
+header h1 { font-family: var(--serif); font-weight: 500; font-size: 1.65rem; letter-spacing: .01em; cursor: pointer; display: inline-flex; align-items: center; }
+/* v1.45.4 — no underline on the wordmark (hover or click); cursor:pointer stays the affordance */
+header h1 em { font-style: normal; color: var(--ledger); }
+header h1 i { font-style: normal; color: #ff5c39; }
+/* v1.45.5 — .tag is a column filling the header height so the links can sit on its BOTTOM line */
+header .tag { color: var(--muted); font-size: .8rem; flex: 1; min-width: 240px; display: flex; flex-direction: column; align-self: stretch; }
+header .tag p { margin: 0; }
+/* v1.45.4/.5 — the page links in the .tag column (never under the logo); right-aligned on the header's
+   bottom line (margin-top:auto pushes them down), equal spacing via flex gap (no dot separators) */
+.hdr-links { font-family: var(--mono); font-size: .7rem; margin-top: auto; padding-top: .35rem; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .3rem 1rem; }
+.hdr-links a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.hdr-links a:hover { color: var(--ledger); }
+/* margin sits ONLY on the logo mark, not a flex `gap` — a gap would also push the orange dot away
+   from "colloquary" (the em↔i pair must stay tight). */
+.logomark { display: inline-block; width: 1.1em; height: 1.1em; margin-right: .35rem; }
+
+.ledger {
+  display: flex; flex-wrap: wrap; gap: .3rem 1.4rem;
+  border-top: 1px solid var(--ink); border-bottom: 1px solid var(--hair);
+  padding: .45rem 0; margin: .9rem 0 .9rem;
+  font-family: var(--mono); font-size: .72rem;
+}
+.ledger span { color: var(--muted); }
+.ledger b { font-weight: 600; color: var(--ink); margin-left: .35rem; }
+
+.controls { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+/* ≈ semantic toggle (v1.29): appears only once vectors exist. NOTE the [hidden] override — an
+   authored display would defeat the hidden attribute otherwise (v1.27.3 demobar gotcha). */
+#sem-toggle { display: inline-flex; align-items: center; font-family: var(--mono); font-size: .74rem;
+  padding: .5rem .7rem; border: 1px solid var(--hair); border-radius: 2px; background: var(--card);
+  color: var(--muted); cursor: pointer; }
+#sem-toggle[hidden] { display: none; }
+#sem-toggle:hover { border-color: var(--ledger); color: var(--ledger); }
+#sem-toggle[aria-pressed="true"] { border-color: var(--ledger); color: var(--ledger); font-weight: 600; }
+.searchwrap { position: relative; flex: 1 1 260px; display: flex; }
+#search {
+  flex: 1 1 auto; width: 100%; min-width: 0; font-size: .82rem; padding: .55rem .8rem;
+  border: 1px solid var(--ink); border-radius: 2px; background: var(--card);
+  font-family: var(--mono); color: var(--ink);
+}
+#search:focus { outline: 2px solid var(--ledger); outline-offset: 1px; }
+/* clear (×) is desktop-hidden by default — type=search shows the native one there;
+   the mobile media query reveals this custom button (touch has no hover) */
+#search-clear { display: none; position: absolute; right: .35rem; top: 50%; transform: translateY(-50%);
+  width: 2rem; height: 2rem; padding: 0; border: none; background: none; color: var(--muted);
+  font-size: 1.5rem; line-height: 1; cursor: pointer; border-radius: 4px;
+  align-items: center; justify-content: center; }
+#search-clear:hover { color: var(--ink); }
+select, .btn {
+  font-family: var(--mono); font-size: .8rem; padding: .55rem .7rem;
+  border: 1px solid var(--hair); background: var(--card); color: var(--ink);
+  border-radius: 2px; cursor: pointer;
+}
+.btn:hover, select:hover { border-color: var(--ink); }
+/* the sender + sort chips match the ≈ semantic chip exactly (size + font), desktop AND mobile — the
+   ID selector also overrides the mobile 16px rule below (Eugen 2026-07-09) */
+#sender, #sort { font-size: .74rem; padding: .5rem .7rem; }
+.btn.primary { border-color: var(--ledger); color: var(--ledger); font-weight: 600; }
+.btn.danger:hover { border-color: #A33; color: #A33; }
+input[type=file] { display: none; }
+
+#count { font-family: var(--mono); font-size: .73rem; color: var(--muted); margin: .8rem 0 .55rem; }
+#countrow { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+#dossier-btn, #summary-btn { font-family: var(--mono); font-size: .68rem; color: var(--ledger); background: none; border: 1px solid var(--hair); border-radius: 4px; padding: .1rem .45rem; cursor: pointer; }
+#dossier-btn:hover, #summary-btn:hover { border-color: var(--ledger); }
+.toolrow { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin-top: .55rem; }
+.tr-label { font-family: var(--mono); font-size: .66rem; color: var(--muted); margin-right: .15rem; }
+.tr-sep { flex: 0 0 1px; height: .9rem; background: var(--hair); margin: 0 .3rem; }
+.hints { font-family: var(--mono); font-size: .68rem; color: var(--muted); }
+.hints .op { font-family: var(--mono); font-size: .64rem; background: var(--card); border: 1px solid var(--hair); padding: .14rem .34rem; border-radius: 2px; cursor: pointer; color: var(--ink); }
+.hints .op:hover { border-color: var(--ledger); color: var(--ledger); }
+/* example-question chips (v1.30.1) — ledger-tinted to read as "smart" (aggregate answers), not operators */
+.asks .ask { font-family: var(--mono); font-size: .64rem; background: var(--card); border: 1px solid var(--hair); padding: .14rem .34rem; border-radius: 2px; cursor: pointer; color: var(--ledger); }
+.asks .ask:hover { border-color: var(--ledger); background: var(--ledger); color: #fff; }
+/* the ask-a-question row is class="toolrow" (display:flex), which would defeat the `hidden`
+   attribute (UA display:none loses to authored display — the v1.27.3 demobar gotcha). Restore
+   gating so the examples stay hidden until an archive exists. */
+#asks[hidden] { display: none; }
+#menu-wrap { position: relative; display: inline-block; }
+#menu-btn { padding: .45rem .6rem; line-height: 1; }
+#menu-pop { display: none; position: absolute; top: calc(100% + 4px); right: 0; z-index: 30;
+  background: var(--card); border: 1px solid var(--hair); border-radius: 2px; padding: .45rem;
+  box-shadow: 0 4px 14px rgba(28,35,31,.12); white-space: nowrap; }
+#menu-pop.open { display: block; }
+#menu-pop .btn { display: block; width: 100%; margin-bottom: .35rem; text-align: left; }
+#menu-pop .btn:last-child { margin-bottom: 0; }
+#recent-wrap { position: relative; display: inline-block; }
+#recent-pop { display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 30;
+  background: var(--card); border: 1px solid var(--ink); border-radius: 2px; padding: .6rem;
+  min-width: 320px; max-width: 90vw; box-shadow: 0 4px 14px rgba(28,35,31,.15);
+  flex-wrap: wrap; gap: .35rem; }
+#recent-pop.open { display: flex; max-height: 45vh; overflow-y: auto; align-content: flex-start; }
+.rc-clear { color: #8C2F2F; }
+.chip { font-family: var(--mono); font-size: .72rem; padding: .25rem .55rem; background: var(--card); border: 1px solid var(--hair); border-radius: 10px; cursor: pointer; color: var(--ink); }
+.chip:hover { border-color: var(--ledger); color: var(--ledger); }
+.attn { font-family: var(--mono); font-size: .7rem; color: var(--ledger); }
+.srcb { font-family: var(--mono); font-size: .62rem; text-transform: uppercase; letter-spacing: .05em;
+  border: 1px solid var(--hair); border-radius: 2px; padding: .05rem .28rem; color: var(--ledger); background: var(--paper); }
+#src-tabs { display: none; gap: .1rem; margin-top: .7rem; border-bottom: 1px solid var(--hair); }
+#src-tabs.show { display: flex; flex-wrap: wrap; }
+#src-tabs .stab { font-family: var(--mono); font-size: .72rem; padding: .35rem .7rem; background: none;
+  border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; color: var(--muted); }
+#src-tabs .stab:hover { color: var(--ledger); }
+#src-tabs .stab.active { color: var(--ink); border-bottom-color: var(--ledger); font-weight: 600; }
+.fghead { font-family: var(--mono); font-size: .74rem; color: var(--ink); margin: 1rem 0 .45rem;
+  padding-bottom: .25rem; border-bottom: 1px solid var(--hair); }
+.fghead:first-child { margin-top: .2rem; }
+.fghead span { color: var(--muted); font-size: .66rem; margin-left: .4rem; }
+/* pins — 📌 toggle on rows/cards + reader + the pinned tab */
+.pin { flex: 0 0 auto; align-self: center; background: none; border: none; cursor: pointer; padding: 0; margin: 0;
+  font-size: .82rem; line-height: 1; opacity: .25; filter: grayscale(1); transition: opacity .12s; }
+.pin:hover { opacity: .7; }
+.pin.on { opacity: 1; filter: none; }
+#src-tabs .stab-pin.active { color: #B5651D; border-bottom-color: #ff9f45; }
+#reader-pin.on { border-color: var(--ledger); color: var(--ledger); font-weight: 600; }
+/* pinned + recent searches in the recent ▾ dropdown */
+.rc-sec { width: 100%; font-family: var(--mono); font-size: .58rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: .15rem 0 -.02rem; }
+.rc-row { display: flex; align-items: stretch; width: 100%; min-width: 0; }
+.rc-row .rc-run { flex: 1 1 auto; min-width: 0; text-align: left; border-radius: 10px 0 0 10px; border-right: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-row .rc-pin { flex: 0 0 auto; background: var(--card); border: 1px solid var(--hair); border-left: none; border-radius: 0 10px 10px 0; cursor: pointer; padding: .25rem .4rem; font-size: .72rem; line-height: 1; opacity: .28; filter: grayscale(1); }
+.rc-row .rc-pin:hover { opacity: .8; }
+.rc-row .rc-pin.on { opacity: 1; filter: none; }
+.rmeta .pfold { color: var(--ledger); text-decoration: none; }
+.rmeta .pfold:hover { text-decoration: underline; }
+
+.card {
+  display: flex; background: var(--card); border: 1px solid var(--hair);
+  border-radius: 2px; margin-bottom: .7rem; overflow: hidden;
+}
+.card.res { display: block; padding: .5rem .8rem .6rem; margin-bottom: .35rem; }
+.card.res .rhead { display: flex; align-items: baseline; gap: .8rem; }
+.card.row { display: flex; align-items: baseline; gap: .8rem; padding: .45rem .8rem; margin-bottom: .35rem; }
+.card.row .rdate, .card.res .rdate { font-family: var(--mono); font-size: .68rem; color: var(--ledger); flex: 0 0 auto; }
+.card.row .rtitle, .card.res .rtitle { font-family: var(--serif); font-size: .98rem; color: var(--ink); text-decoration: none;
+  flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card.row .rtitle:hover, .card.res .rtitle:hover { color: var(--ledger); text-decoration: underline; }
+.card.row .rmeta, .card.res .rmeta { font-family: var(--mono); font-size: .7rem; color: var(--muted); flex: 0 0 auto; white-space: nowrap; }
+.rmeta .filelink, .rmeta .rext { color: var(--ledger); text-decoration: none; }
+.rmeta .filelink:hover, .rmeta .rext:hover { text-decoration: underline; }
+.snippet { display: block; font-size: .85rem; line-height: 1.42; color: #3A423C; margin-top: .3rem; overflow-wrap: break-word; text-decoration: none; border-left: 2px solid transparent; padding-left: .5rem; margin-left: -.5rem; border-radius: 1px; }
+a.snippet:hover, a.snippet:focus-visible { border-left-color: var(--ledger); background: #F0F3EF; outline: none; }
+a.snippet:hover::after { content: " ↗"; color: var(--ledger); font-family: var(--mono); font-size: .72rem; }
+.snippet .who {
+  font-family: var(--mono); font-size: .66rem; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--muted); margin-right: .4rem;
+}
+mark { background: var(--mark); padding: 0 .1em; border-radius: 1px; }
+.nores { color: var(--muted); font-style: italic; }
+
+/* query-router answer strip (v1.30) — a computed aggregate above the search results */
+#answer:empty { display: none; }
+#answer { margin: .1rem 0 .55rem; }
+.answer { border: 1px solid var(--ledger); border-left-width: 3px; border-radius: 3px; background: var(--card); padding: .45rem .7rem .5rem; }
+.ans-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .18rem; }
+.ans-tag { font-family: var(--mono); font-size: .58rem; letter-spacing: .09em; text-transform: uppercase; color: var(--ledger); }
+.ans-x { font-family: var(--mono); font-size: .64rem; color: var(--muted); background: none; border: none; cursor: pointer; padding: 0; white-space: nowrap; }
+.ans-x:hover { color: var(--ink); text-decoration: underline; }
+.ans-main { font-family: var(--serif); font-size: 1.05rem; color: var(--ink); line-height: 1.35; }
+.ans-main b { color: var(--ledger); font-weight: 600; }
+.ans-sub { font-family: var(--mono); font-size: .72rem; color: var(--muted); margin-top: .22rem; display: flex; align-items: flex-end; gap: .55rem; flex-wrap: wrap; }
+.ansbars { display: inline-flex; align-items: flex-end; gap: 2px; height: 22px; }
+.ansbars i { width: 6px; min-height: 2px; background: var(--ledger); opacity: .78; border-radius: 1px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.ansspan { color: var(--muted); }
+.ans-foot { font-family: var(--mono); font-size: .64rem; color: var(--muted); margin-top: .35rem; }
+.ans-stats { font-family: var(--mono); font-size: .64rem; color: var(--ledger); background: none; border: none; cursor: pointer; padding: 0; }
+.ans-stats:hover { text-decoration: underline; }
+
+.privbadge { display:table; margin:.6rem auto .8rem; text-align:center; background:var(--ink, #1e2a26); color:#e8f0ec; border-radius:6px; padding:.35rem .7rem; font-size:.82rem; }
+#demo-btn, #demo-clear { font:inherit; font-size:.85rem; padding:.3rem .7rem; border:1px solid var(--accent, #ff5c39); background:transparent; color:inherit; border-radius:6px; cursor:pointer; }
+#demo-btn:hover, #demo-clear:hover { background:var(--accent, #ff5c39); color:#fff; }
+#demobar[hidden] { display:none; } /* the explicit display:flex below would otherwise BEAT the hidden attribute (UA display:none loses) — the exact bug Eugen caught twice */
+#demobar { background:#fff7ec; border:1px solid var(--accent, #ff5c39); border-radius:8px; padding:.5rem .8rem; margin:.6rem 0; font-size:.85rem; display:flex; align-items:center; gap:.8rem; }
+#empty {
+  display: none; border: 1px dashed var(--muted); border-radius: 2px;
+  padding: 1.2rem 1.4rem; text-align: center; color: var(--muted); margin-top: 1rem;
+}
+#empty b { color: var(--ink); font-family: var(--serif); font-weight: 500; font-size: 1.1rem; display: block; margin: 0 0 1rem; }
+#empty .privbadge { margin: 0 auto 1rem; }
+#empty ol { text-align: left; max-width: 420px; margin: .8rem auto 0; font-size: .9rem; line-height: 1.7; }
+
+#progress { display: none; position: fixed; left: 0; right: 0; bottom: 0; background: var(--ink); color: #fff; padding: .7rem 1.2rem; z-index: 40; }
+#progress-label { font-family: var(--mono); font-size: .75rem; display: block; margin-bottom: .45rem; }
+#progress-track { height: 4px; background: rgba(255,255,255,.25); border-radius: 2px; }
+#progress-bar { height: 100%; width: 0; background: var(--mark); border-radius: 2px; transition: width .25s; }
+
+#toast {
+  position: fixed; top: 1rem; left: 50%; transform: translateX(-50%) translateY(-220%);
+  background: var(--ink); color: #fff; font-family: var(--mono); font-size: .78rem;
+  padding: .6rem 1rem; border-radius: 2px; transition: transform .25s; z-index: 60; max-width: 90vw;
+  cursor: pointer; /* every toast is click-to-dismiss (v1.40.2) — no waiting out the timeout */
+}
+#toast.show:hover { opacity: .9; }
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.error { background: #8C2F2F; }
+#toast.error.show { transform: translateX(-50%) translateY(0); }
+
+footer { margin-top: 3rem; font-family: var(--mono); font-size: .7rem; color: var(--muted); line-height: 1.7; }
+footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+footer a:hover { color: var(--ledger); }
+/* v1.45.3 — the same links line repeated at the end of the static pages (footer is far below a loaded archive) */
+.pglinks { margin-top: 2rem; padding-top: .8rem; border-top: 1px solid var(--hair); font-family: var(--mono); font-size: .7rem; color: var(--muted); line-height: 1.7; }
+.pglinks a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+.pglinks a:hover { color: var(--ledger); }
+
+#reader { display: none; position: fixed; inset: 0; background: rgba(28,35,31,.55); z-index: 45; }
+#reader.open { display: flex; justify-content: center; }
+#reader-panel {
+  background: var(--card); width: min(860px, 100%); margin: 1.2rem; border-radius: 3px;
+  display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--hair);
+}
+#reader-head {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  padding: 1rem 1.2rem; border-bottom: 1px solid var(--ink); background: var(--paper);
+}
+#reader-title { font-family: var(--serif); font-weight: 500; font-size: 1.25rem; }
+#reader-meta { font-family: var(--mono); font-size: .72rem; color: var(--muted); margin-top: .25rem; }
+.rh-actions { display: flex; gap: .5rem; flex-shrink: 0; }
+.rh-actions .btn { text-decoration: none; font-size: .74rem; height: 2.1rem; padding: 0 .7rem; -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; } /* EXPLICIT fixed height (~33.6px) = uniform chip height across engines (WebKit sizes a native <button> ≠ an <a>); label vertically centered via align-items:center (NO line-height/justify override — those changed how glyphs sat and read as "different font"). Desktop keeps .7rem side padding; mobile tightens below to fit "open on…" on row 1. (Eugen 2026-07-09) */
+/* find-in-conversation bar (below the reader header) */
+#reader-find { display: flex; align-items: center; gap: .4rem; padding: .5rem 1.2rem; border-bottom: 1px solid var(--hair); background: var(--paper); }
+#reader-find[hidden] { display: none; } /* authored display would beat the hidden attr otherwise (v1.27.3 demobar lesson) */
+#find-input { flex: 1; min-width: 0; font-family: var(--mono); font-size: .82rem; padding: .35rem .5rem; border: 1px solid var(--hair); border-radius: 2px; background: var(--card); color: var(--ink); }
+#find-input:focus { outline: none; border-color: var(--ledger); }
+.find-count { font-family: var(--mono); font-size: .7rem; color: var(--muted); white-space: nowrap; min-width: 2.6rem; text-align: right; }
+.find-nav { background: var(--card); border: 1px solid var(--hair); border-radius: 2px; cursor: pointer; color: var(--muted); font-size: .82rem; line-height: 1; padding: .3rem .5rem; }
+.find-nav:hover { color: var(--ledger); border-color: var(--ledger); }
+mark.find { background: #FFE9A8; color: var(--ink); border-radius: 1px; }
+mark.find.cur { background: #FF9F45; color: #1c231f; }
+/* print-only lines (e.g. the original-chat URL at the top of a saved PDF) */
+.print-only { display: none; }
+#reader-files { display: none; }
+#reader-panel.files-mode #reader-body { display: none; }
+#reader-panel.files-mode #reader-files { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: .35rem; align-content: start; padding: 1rem 1.2rem 2rem; overflow-y: auto; flex: 1; background: var(--paper); }
+.fchip { display: flex; align-items: center; gap: .4rem; box-sizing: border-box; text-align: left;
+  font-family: var(--mono); font-size: .7rem; padding: .4rem .55rem;
+  background: var(--card); border: 1px solid var(--hair); border-radius: 2px; cursor: pointer; color: var(--ledger);
+  overflow-wrap: anywhere; }
+.fchip:hover { border-color: var(--ledger); background: #F0F3EF; }
+.fchip.dead { color: var(--muted); }
+.fchip.dead:hover { border-color: var(--muted); background: var(--card); }
+.fchip.copyable { cursor: pointer; }
+.fchip.copyable:hover { border-color: var(--ledger); }
+.fchip .fno-open { margin-left: .3rem; color: var(--muted); text-decoration: none; font-style: normal; }
+.fchip .fno-open:hover { color: var(--ledger); }
+.fchip .fno { font-style: normal; font-size: .6rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); background: var(--paper); border: 1px solid var(--hair); border-radius: 2px; padding: .02rem .28rem; margin-left: auto; white-space: nowrap; }
+.fchip.open { padding: 0; gap: 0; align-items: stretch; }
+.fchip.open .fc-open { flex: 1; display: flex; align-items: center; gap: .35rem; min-width: 0; background: none; border: none; cursor: pointer; color: var(--ledger); font-family: var(--mono); font-size: .7rem; padding: .4rem .55rem; text-align: left; overflow-wrap: anywhere; }
+.fchip.open .farr { font-style: normal; color: var(--muted); margin-left: auto; padding-left: .3rem; }
+.fchip.open .fc-dl { background: none; border: none; border-left: 1px solid var(--hair); cursor: pointer; color: var(--muted); padding: 0 .55rem; font-size: .82rem; display: flex; align-items: center; }
+.fchip.open .fc-dl:hover { color: var(--ledger); background: var(--paper); }
+#reader-body { overflow-y: auto; padding: 1rem 1.2rem 2rem; }
+.msg { padding: .7rem .8rem; border-left: 2px solid var(--hair); margin-bottom: .8rem; }
+.msg.from-h { border-left-color: var(--muted); background: var(--paper); }
+.msg .msg-who { font-family: var(--mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .3rem; display: block; }
+.msg .msg-text { font-size: .9rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: break-word; color: #2C332E; }
+.msg.hit { border-left-color: var(--ledger); background: #EDF4F0; }
+.msg.hit .msg-who { color: var(--ledger); }
+.msg.att { border-left-style: dashed; padding: 0; }
+.att-bar { display: flex; align-items: stretch; }
+.msg.att .att-head { display: flex; align-items: center; gap: .45rem; flex: 1; text-align: left;
+  background: none; border: none; cursor: pointer; padding: .6rem .8rem; min-width: 0;
+  font-family: var(--mono); font-size: .74rem; color: var(--ledger); }
+.msg.att .att-dl { background: none; border: none; border-left: 1px solid var(--hair); cursor: pointer;
+  padding: 0 .8rem; font-size: .9rem; color: var(--muted); }
+.msg.att .att-dl:hover { color: var(--ledger); background: var(--paper); }
+a.fchip { text-decoration: none; }
+.msg.att .att-head:hover { background: var(--paper); }
+.msg.att .att-size { color: var(--muted); margin-left: auto; }
+.msg.att .att-caret { transition: transform .15s; }
+.msg.att:not(.collapsed) .att-caret { transform: rotate(90deg); }
+.msg.att.collapsed .msg-text { display: none; }
+.msg.att .msg-text { font-family: var(--mono); font-size: .78rem; padding: 0 .8rem .7rem; }
+.mdtable { border-collapse: collapse; margin: .6rem 0; font-size: .8rem; display: block; overflow-x: auto; max-width: 100%; white-space: normal; }
+.mdtable th, .mdtable td { border: 1px solid var(--hair); padding: .3rem .55rem; text-align: left; vertical-align: top; }
+.mdtable th { background: var(--paper); font-family: var(--mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; }
+.mdtable tr:nth-child(even) td { background: var(--paper); }
+.codewrap { position: relative; }
+.codeblock { background: #202723; color: #E8ECE9; font-family: var(--mono); font-size: .75rem; line-height: 1.5; padding: .7rem .8rem; border-radius: 2px; margin: .5rem 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.codeblock mark { background: var(--mark); color: var(--ink); }
+/* Copy button per code block: hover-reveal on desktop; the mobile breakpoint pins it always-on */
+.codecopy { position: absolute; top: .35rem; right: .35rem; font-family: var(--mono); font-size: .6rem;
+  padding: .18rem .5rem; border: 1px solid #3A423C; background: #2C332E; color: #C7CEC9; border-radius: 3px;
+  cursor: pointer; opacity: 0; transition: opacity .12s; }
+.codewrap:hover .codecopy, .codecopy:focus-visible { opacity: 1; }
+.codecopy:hover { color: #fff; border-color: var(--ledger); }
+@media print { .codecopy { display: none !important; } }
+@media (max-width: 640px) { #reader-panel { margin: 0; border-radius: 0; } }
+/* Mobile-only row + search tidy-ups (desktop layout untouched — everything here is inside this query) */
+@media (max-width: 640px) {
+  /* Cowork/Code rows were crushed to a one-letter title by the folder chip + source badge + counts.
+     Give the title its own line; let the meta wrap underneath. */
+  .card.row, .card.res .rhead { flex-wrap: wrap; column-gap: .6rem; row-gap: .1rem; }
+  .card.row .rtitle, .card.res .rtitle { white-space: normal; overflow: visible; text-overflow: clip; }
+  .card.row .rmeta, .card.res .rmeta { flex: 1 0 100%; white-space: normal; }
+  /* touch has no hover, so surface an always-tappable clear button and drop the native one */
+  #search::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+  #search { padding-right: 2.4rem; }
+  .searchwrap.has #search-clear { display: flex; }
+  /* reader header: pin the close ✕ so it can't be pushed off-screen by the other actions */
+  #reader-head { position: relative; flex-wrap: wrap; padding-right: 2.2rem; } /* gutter for the pinned ✕ (was 2.8rem — trimmed to reclaim row width) */
+  #reader-head .rh-text { flex: 1 1 100%; }
+  #reader-head .rh-actions { flex-wrap: wrap; flex: 1 1 100%; gap: .25rem; } /* tighter gap between chips (was .5rem) */
+  #reader-head .rh-actions .btn { padding: 0 .35rem; } /* tighter side padding on mobile so "open on <host> ↗" fits on row 1 with Pin/Find/Save PDF (≥390px phones); the label alone is ~152px so gap-only wasn't enough */ /* fill the wrapped row so buttons wrap instead of overflowing right (was sizing to content) */
+  #reader-close { position: absolute; top: .7rem; right: .7rem; width: 2.1rem; padding: 0; justify-content: center; } /* square ✕ (= its 2.1rem height); the tight .35rem chip padding made it a narrow portrait otherwise */
+  /* touch has no hover — keep the code Copy button visible */
+  .codecopy { opacity: 1; }
+  /* compact header (Eugen: the name eats too much space on mobile): small logo + smaller wordmark,
+     and swap the long paragraph tagline for a short capability-forward line (search is not all it does). */
+  header { align-items: center; justify-content: center; text-align: center; gap: .2rem .5rem; }
+  header h1 { font-size: 1.3rem; }
+  /* v1.45.7 — `header .tag` (not bare `.tag`): the base `header .tag` rule out-specified this one, so
+     on wider phones the tag column sat BESIDE the logo (cramped, links broke mid-word — Eugen's
+     screenshot). Full-basis + matching specificity = tagline ALWAYS stacks under the centered logo. */
+  header .tag { flex: 1 1 100%; text-align: center; margin-top: .15rem; }
+  /* mobile keeps the centered header: links centered under the tagline, tighter gap so all five fit
+     one row (desktop right-aligns them on the header's bottom line) */
+  .hdr-links { justify-content: center; margin-top: .3rem; gap: .3rem .7rem; }
+  /* v1.45.8 — grouped menu on mobile: label on its own line, chips in a 2-col grid of EQUAL widths
+     (no ragged empty space); a lone odd last chip spans both columns; danger drops the desktop
+     margin-left:auto (it's a grid cell here). */
+  .tng { display: block; }
+  .tng-lab { display: block; text-align: left; margin: .1rem 0 .25rem; }
+  .tng-chips { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; }
+  .tng-chips .tnav { margin: 0; }
+  .tng-chips > .tnav:last-child:nth-child(odd) { grid-column: span 2; }
+  /* close the two empty-state gaps (Eugen): trim the page's top padding, drop the dead margin an
+     empty #count still reserves, and tighten the "archive is empty" box's own top space. */
+  .wrap { padding-top: .6rem; }
+  #count:empty { margin: 0; }
+  /* search field spans its own row; the two filter selects drop below it, each half width */
+  .searchwrap { flex: 1 1 100%; }
+  #sender, #sort { flex: 1 1 0; min-width: 0; }
+  /* iOS zooms the whole page when a focused TEXT field's font-size is < 16px. Keep text inputs at
+     16px on mobile so tapping them never zooms the layout (pinch-zoom stays enabled, unlike the
+     maximum-scale hack). Selects (#sender/#sort) are deliberately NOT here — they match the ≈ chip
+     size, and tapping a <select> opens a picker rather than zooming. */
+  #search, #find-input, input:not([type=file]), textarea { font-size: 16px; }
+  /* tight, even vertical rhythm in the empty box */
+  #empty { margin-top: .5rem; padding-top: .6rem; }
+  #empty b { margin: 0 0 .6rem; }
+  #empty .privbadge { margin: 0 auto .6rem; }
+}
+
+/* ---- static pages in the reader shell (Stats / How to use) ---- */
+.page h3 { font-family: var(--serif); font-weight: 500; font-size: 1.05rem; margin: 1.4rem 0 .5rem; }
+.page h3:first-child { margin-top: .2rem; }
+.page p, .page li { font-size: .88rem; line-height: 1.6; color: #2C332E; }
+.page ul, .page ol { padding-left: 1.3rem; margin: .3rem 0 .6rem; }
+.page .note { font-family: var(--mono); font-size: .7rem; color: var(--muted); }
+.page code { font-family: var(--mono); font-size: .78rem; background: var(--paper); border: 1px solid var(--hair); border-radius: 2px; padding: .05rem .3rem; }
+.stt { display: flex; flex-wrap: wrap; gap: .4rem 1.6rem; font-family: var(--mono); font-size: .74rem; margin: .2rem 0 .4rem; }
+.stt span { color: var(--muted); }
+.stt b { color: var(--ink); margin-left: .35rem; }
+.srow { display: flex; align-items: center; gap: .6rem; margin: .18rem 0; font-family: var(--mono); font-size: .72rem; }
+.srow .sl { flex: 0 0 7rem; color: var(--muted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srow .sbar { height: .78rem; background: var(--ledger); border-radius: 1px; min-width: 1px; opacity: .85; }
+.srow .sbar.alt { background: var(--muted); }
+.srow .sv { color: var(--ink); white-space: nowrap; }
+.srow .sv i { color: var(--muted); font-style: normal; margin-left: .5rem; }
+.hm { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 11px); gap: 2px; overflow-x: auto; padding-bottom: .3rem; }
+.hm i { width: 11px; height: 11px; border-radius: 2px; background: #E7EAE5; }
+.hm .l1 { background: #C4DCCB; } .hm .l2 { background: #8FC0A0; } .hm .l3 { background: #4E9571; } .hm .l4 { background: #1E6B50; }
+.hleg { font-family: var(--mono); font-size: .66rem; color: var(--muted); margin-top: .25rem; }
+/* v1.49.0 — every entity IS the full cassette, inline (Eugen's pick): a bordered card with
+   name+kind · stats incl. busiest · the labeled month chart · top conversations · appears-with.
+   The v1.48.x hover-card/bottom-sheet machinery is gone. */
+.entcard { border: 1px solid var(--hair); background: var(--card); border-radius: 2px; padding: .55rem .75rem .6rem; margin: .5rem 0; font-family: var(--mono); font-size: .72rem; color: var(--ink); }
+.entcard h4 { margin: 0 0 .25rem; font-size: .8rem; }
+.entcard .ep-kind { color: var(--muted); margin-left: .45rem; font-weight: 400; font-size: .66rem; }
+.entcard .ep-meta { color: var(--muted); margin: 0 0 .4rem; }
+.entcard .ep-bars { display: flex; align-items: flex-end; gap: 2px; height: 44px; }
+.entcard .ep-bars i { flex: 1 1 auto; min-height: 1px; background: var(--ledger); opacity: .8; }
+.entcard .ep-bars i.z { background: var(--hair); }
+.entcard .ep-lab { display: flex; justify-content: space-between; color: var(--muted); font-size: .66rem; margin: .2rem 0 .4rem; }
+.entcard .ep-convs { margin: 0 0 .35rem; padding-left: 1rem; }
+.entcard .ep-convs a { color: var(--ledger); }
+.entcard .entco { margin: 0; font-size: .95em; color: var(--muted); }
+.entcard .entco a { color: var(--muted); }
+/* v1.45.9 — the By-month graph opens at its LATEST end: chronological rows in a capped scroll box
+   (~14 rows), pre-scrolled to the bottom after render; scroll up for the beginning. Print: uncapped
+   so a Save-PDF keeps the whole timeline. */
+.monwrap { max-height: 16.5rem; overflow-y: auto; }
+@media print { .monwrap { max-height: none; overflow: visible; } }
+.hbars { display: flex; align-items: flex-end; gap: 2px; height: 64px; max-width: 480px; }
+.hbars i { flex: 1; background: var(--ledger); opacity: .8; border-radius: 1px 1px 0 0; min-height: 1px; }
+.hlab { display: flex; justify-content: space-between; max-width: 480px; font-family: var(--mono); font-size: .64rem; color: var(--muted); margin-top: .2rem; }
+.page a.readlink { color: var(--ledger); }
+
+/* print = the built-in "save stats as PDF": only the open reader page survives */
+@media print {
+  body > .wrap, #progress, #toast, .rh-actions, #reader-find { display: none !important; }
+  .print-only:not([hidden]) { display: block; font-family: var(--mono); font-size: .68rem; color: #333; margin-top: .35rem; word-break: break-all; }
+  #reader { display: block !important; position: static; background: none; }
+  #reader-panel { display: block; margin: 0; width: 100%; border: none; }
+  #reader-body { overflow: visible; }
+  .hm i, .hbars i, .srow .sbar, .entcard .ep-bars i { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .codeblock { white-space: pre-wrap !important; overflow-x: visible !important; overflow-wrap: anywhere; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .mdtable { overflow-x: visible !important; display: table; }
+}
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Suggest skills (compiler mode 4) */
+.sg-intro { font-size: .85rem; color: var(--muted); line-height: 1.5; margin: 0 0 1rem; }
+.sg-intro code { font-family: var(--mono); font-size: .8rem; }
+.sg-list { display: flex; flex-direction: column; gap: .55rem; }
+.sg-item { border: 1px solid var(--hair); border-radius: 8px; background: var(--card); padding: .7rem .8rem; }
+.sg-h { display: flex; align-items: center; gap: .5rem; }
+.sg-label { font-weight: 600; font-size: .95rem; color: var(--ink); }
+.sg-tag { font-family: var(--mono); font-size: .6rem; text-transform: uppercase; letter-spacing: .04em; padding: .12rem .4rem; border-radius: 4px; white-space: nowrap; }
+.sg-tag.seed { background: rgba(30,107,80,.12); color: var(--ledger); }
+.sg-tag.disc { background: rgba(255,92,57,.14); color: #c23c1a; }
+.sg-meta { font-family: var(--mono); font-size: .72rem; color: var(--muted); margin: .35rem 0 .6rem; }
+.sg-item .sg-compile { font-size: .8rem; padding: .35rem .7rem; }
+</style>
+</head>
+<body>
+<div id="topwrap">
+  <div id="topbar" role="button" tabindex="0" aria-expanded="false" aria-controls="topnav" title="Tools — Stats, Token coach, me.skill and more"><span class="tdot" aria-hidden="true"></span></div>
+  <!-- v1.45.8 — grouped by function (Eugen's pick): labeled rows, house pattern of the operators/ask
+       chip rows. data-act buttons unchanged; the #topnav click delegation works through the wrappers. -->
+  <div id="topnav" role="menu" aria-label="Tools">
+    <div class="tng"><span class="tng-lab">insights</span><div class="tng-chips">
+      <button class="tnav" data-act="stats" role="menuitem">Stats</button>
+      <button class="tnav" data-act="coach" role="menuitem">Token coach</button>
+      <button class="tnav" data-act="entities" role="menuitem" title="Your technical footprint — the domains, servers, repos and paths recurring across your archive, each linking to every context where you touched it. Extracted with plain patterns, never inferred; all local.">Entities</button>
+    </div></div>
+    <div class="tng"><span class="tng-lab">skills</span><div class="tng-chips">
+      <button class="tnav" data-act="meskill" role="menuitem">Make me.skill</button>
+      <button class="tnav" data-act="compile" role="menuitem" title="Compile a topic — type a phrase and colloquary distills the on-topic passages from your archive by MEANING (needs Semantic search on). An extract, in your own words.">Compile a topic</button>
+      <button class="tnav" data-act="compileskill" role="menuitem" title="Compile an installable .skill from a topic — a preset (coding / design / writing), any phrase, or a merge of 2–3 with “+” (e.g. coding + design). Distilled locally from your on-topic conversations (critique-deltas, rituals, labels, vocab). Needs Semantic search on.">Compile a skill</button>
+      <button class="tnav" data-act="suggest" role="menuitem" title="Suggest skills — colloquary ranks the richest topics in your archive (curated + discovered by clustering your conversations) and proposes the .skill you can compile from each. Needs Semantic search on.">Suggest skills</button>
+    </div></div>
+    <div class="tng"><span class="tng-lab">data</span><div class="tng-chips">
+      <button class="tnav" data-act="importexport" role="menuitem">Import Claude / ChatGPT</button>
+      <button class="tnav" data-act="import" role="menuitem">Import Code/Cowork</button>
+      <button class="tnav" data-act="download" role="menuitem" title="Back up your whole text archive as one local .zip — all messages + text attachments (binary files are not in the Claude export, only their names). Drop it onto colloquary on another device, including your phone.">Download archive</button>
+    </div></div>
+    <div class="tng"><span class="tng-lab">semantic</span><div class="tng-chips">
+      <button class="tnav" data-act="semantic" role="menuitem" title="One-time opt-in: download the AI model (~120–240 MB, self-hosted on colloquary.com) and embed your archive locally, so search also finds messages by MEANING — paraphrases, other languages, vague memories. Everything stays in this browser.">Semantic search</button>
+      <button class="tnav" data-act="semmodel" role="menuitem" title="Switch the embedding model behind semantic search: e5 (default) or EmbeddingGemma (much sharper meaning-matching; one-time ~190 MB download + a resumable re-embed of your archive). Your existing vectors are kept — switching back is instant. Desktop only.">Semantic model</button>
+      <button class="tnav" data-act="semdownload" role="menuitem" title="Save your semantic embeddings as one local .cvec file (~50 MB) to carry to another device — so your phone doesn’t have to re-embed the whole archive (which iOS can’t do). Best run on a desktop after embedding.">Download embeddings</button>
+      <button class="tnav" data-act="semimport" role="menuitem" title="Load a colloquary embeddings (.cvec) file exported from your desktop, so semantic search works here without embedding locally. Import your archive first.">Import embeddings</button>
+      <button class="tnav" data-act="semtest" role="menuitem" title="Diagnostic: checks the semantic model files and this device’s capabilities, then shows the result in a pop-up.">Semantic self-test</button>
+    </div></div>
+    <div class="tng"><span class="tng-lab">help</span><div class="tng-chips">
+      <button class="tnav" data-act="help" role="menuitem">How to use</button>
+      <button class="tnav danger" data-act="clear" role="menuitem">Clear data</button>
+    </div></div>
+  </div>
+</div>
+<div class="wrap">
+  <header id="page-head" title="Open the menu">
+    <h1 id="home-logo" title="Back to all conversations"><svg class="logomark" viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="13" fill="#FBFBF9" stroke="#DCE0DA" stroke-width="2"/><rect x="15" y="23" width="28" height="9" rx="4.5" fill="#1E6B50"/><rect x="22" y="37" width="28" height="9" rx="4.5" fill="#ff5c39"/></svg><em>colloquary</em><i>.</i></h1>
+    <div class="tag">
+      <p>Browse and search your Claude &amp; ChatGPT chats, ask questions, see your stats — and turn them into skills. All local, in this browser. Nothing uploaded.</p>
+      <nav class="hdr-links"><a href="#" id="h-about">about</a><a href="#" id="h-faq">faq</a><a href="#" id="h-privacy">privacy</a><a href="#" id="h-help">how to use</a><a href="mailto:hello@colloquary.com">feedback</a></nav>
+    </div>
+  </header>
+
+  <div class="ledger">
+    <span>conversations<b id="stat-convs">0</b></span>
+    <span>messages<b id="stat-msgs">0</b></span>
+    <span>files<b id="stat-files">0</b></span>
+    <span>range<b id="stat-range">—</b></span>
+    <span>last import<b id="stat-import">never</b></span>
+  </div>
+
+  <div class="controls">
+    <div class="searchwrap">
+      <input id="search" type="search" placeholder="Search, or ask a question…" disabled>
+      <button id="search-clear" type="button" aria-label="Clear search" title="Clear search">×</button>
+    </div>
+    <select id="sender" aria-label="Filter by sender" title="Show matches from you, Claude, or both">
+      <option value="">me + claude</option>
+      <option value="h">me only</option>
+      <option value="a">claude only</option>
+    </select>
+    <select id="sort" aria-label="Sort results">
+      <option value="relevance">best match</option>
+      <option value="newest">newest first</option>
+    </select>
+    <button id="sem-toggle" type="button" hidden aria-pressed="false" title="Hybrid search on/off">≈ semantic</button>
+    <input id="file-input" type="file" accept=".zip,.json">
+    <input id="dir-input" type="file" webkitdirectory>
+    <input id="vec-input" type="file">
+    <!-- tools moved to the top bar (#topwrap / #topnav) -->
+  </div>
+
+  <div class="hints toolrow">
+    <span class="tr-label">operators</span>
+    <button class="op" data-ins='"|"'>"phrase"</button>
+    <button class="op" data-ins="-|">-exclude</button>
+    <button class="op" data-ins="from:me |">from:me</button>
+    <button class="op" data-ins="chat:|">chat:</button>
+    <button class="op" data-ins="on:|">on:</button>
+    <button class="op" data-ins=" OR |">OR</button>
+    <button class="op" data-ins="after:2026-|">after:</button>
+    <button class="op" data-ins="before:2026-|">before:</button>
+    <button class="op" data-ins="file:|">file:</button>
+    <button class="op" data-ins="has:attachment |">has:att</button>
+    <button class="op" data-ins="source:|">source:</button>
+    <button class="op" data-ins="folder:|">folder:</button>
+    <button class="op" data-ins=" AND |">AND</button>
+    <span class="tr-sep"></span>
+    <span id="recent-wrap">
+      <button id="recent-btn" class="op" style="display:none">recent ▾</button>
+      <div id="recent-pop"></div>
+    </span>
+  </div>
+  <div id="asks" class="asks toolrow">
+    <span class="tr-label">ask a question</span>
+    <button class="ask" data-q="how many hours on " data-tmpl="1" title="Type a topic after it, then press Enter — a quick answer appears above the results">how many hours on…</button>
+    <button class="ask" data-q="how many chats about " data-tmpl="1" title="Type a topic after it, then press Enter">how many chats about…</button>
+    <button class="ask" data-q="when did I first talk about " data-tmpl="1" title="Type a topic after it, then press Enter">when did I first…</button>
+    <button class="ask" data-q="how active was I last month">how active was I last month</button>
+    <button class="ask" data-q="how many chats this week">how many chats this week</button>
+    <button class="ask" data-q="how many hours yesterday">how many hours yesterday</button>
+  </div>
+  <div id="src-tabs"></div>
+  <div id="countrow"><p id="count"></p><button id="dossier-btn" hidden title="Download the conversations below as ONE chronological markdown file — readable, and attachable to a fresh AI chat as context">&#11015; dossier</button><button id="summary-btn" hidden title="Summarize the conversations below — an extract in your own words, opened in the reader">summary</button></div>
+  <div id="answer"></div>
+  <div id="results"></div>
+
+  <div id="empty">
+    <b>Your archive is empty</b>
+    <p class="privbadge">&#128274; Everything stays in this browser, on this device. No uploads, no account, no analytics.</p>
+    Import your Claude or ChatGPT data export — the <code>.zip</code> or <code>conversations.json</code> you can't easily open — to search every old conversation and the text files in them, ask questions about your history, and track your token usage. All local; nothing is uploaded.
+    <p style="margin-top:.8rem"><button id="demo-btn" type="button">Try a sample archive</button></p>
+    <ol>
+      <li>In Claude: Settings → Privacy → <strong>Export data</strong><br>In ChatGPT: Settings → Data controls → <strong>Export data</strong></li>
+      <li>Wait for the email, download the zip</li>
+      <li>Drag the zip anywhere on this page — or <strong>Import Claude / ChatGPT</strong> in the top bar (no need to unzip)</li>
+    </ol>
+    <p style="margin-top:.8rem">To update later: request a fresh export and drop it here — only new and changed conversations are re-imported.</p>
+    <p style="margin-top:.8rem">Also use Claude Code or Cowork? Drag your <strong>~/.claude</strong> or <strong>local-agent-mode-sessions</strong> folder here (or use <strong>Import Code/Cowork</strong> in the top bar) to index those sessions too.</p>
+  </div>
+  <div id="demobar" hidden>You are viewing a <strong>sample archive</strong> — fake data for trying the app. <button id="demo-clear" type="button">Clear sample</button></div>
+
+  <footer>
+    colloquary keeps your archive in this browser's local storage (IndexedDB) on this device only.<br>
+    Open a conversation title to jump to it on claude.ai or chatgpt.com. Works offline after first load.<br>
+    <a href="#" id="f-about">about</a> · <a href="#" id="f-faq">faq</a> · <a href="#" id="f-privacy">privacy</a> · <a href="#" id="f-help">how to use</a> · <a href="mailto:hello@colloquary.com">feedback</a> · <span id="f-ver"></span>
+  </footer>
+</div>
+
+<div id="progress"><span id="progress-label"></span><div id="progress-track"><div id="progress-bar"></div></div></div>
+<div id="toast"></div>
+
+<div id="reader" role="dialog" aria-modal="true">
+  <div id="reader-panel">
+    <header id="reader-head">
+      <div class="rh-text">
+        <h2 id="reader-title"></h2>
+        <p id="reader-meta"></p>
+        <p id="reader-print-link" class="print-only" hidden></p>
+      </div>
+      <div class="rh-actions">
+        <button id="reader-pin" class="btn" style="display:none" title="Pin this conversation"></button>
+        <button id="reader-find-btn" class="btn" style="display:none" title="Find in this conversation (⌘/Ctrl+F)">Find</button>
+        <button id="reader-summary-btn" class="btn" style="display:none" title="Summarize this conversation — an extract in your own words">Summarize</button>
+        <button id="reader-files-btn" class="btn" style="display:none"></button>
+        <button id="reader-print" class="btn" style="display:none" title="Print — pick “Save as PDF” in the dialog">Save PDF</button>
+        <a id="reader-ext" class="btn" href="#" target="_blank" rel="noopener">open on claude.ai ↗</a>
+        <button id="reader-close" class="btn" aria-label="Close reader">✕</button>
+      </div>
+    </header>
+    <div id="reader-find" hidden>
+      <input id="find-input" type="text" placeholder="Find in conversation…" autocomplete="off" spellcheck="false" aria-label="Find in conversation">
+      <span id="find-count" class="find-count">0</span>
+      <button id="find-prev" class="find-nav" title="Previous match (Shift+Enter)" aria-label="Previous match">↑</button>
+      <button id="find-next" class="find-nav" title="Next match (Enter)" aria-label="Next match">↓</button>
+      <button id="find-close" class="find-nav" title="Close find (Esc)" aria-label="Close find">✕</button>
+    </div>
+    <div id="reader-files"></div>
+    <div id="reader-body"></div>
+  </div>
+</div>
+
+<script>/*__FFLATE__*/</script>
+<script>/*__MINISEARCH__*/</script>
+<script type="text/js-worker" id="worker-src">
+/*__FFLATE_WORKER__*/
+/*__WORKER__*/
+</script>
+<script>/*__APP__*/</script>
+</body>
+</html>

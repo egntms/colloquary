@@ -1,0 +1,7 @@
+{
+  "name": "chatalog",
+  "version": "1.7.0",
+  "private": true,
+  "scripts": { "build": "python3 assemble.py" },
+  "dependencies": { "fflate": "^0.8.2", "minisearch": "^7.2.0" }
+}
