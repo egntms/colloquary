@@ -92,5 +92,13 @@ ok('card: name is a search link', card.indexOf('class="entq" data-q="example.com
 ok('card: appears-with appended', card.indexOf('appears with:') >= 0 && card.indexOf('data-q="x"') >= 0);
 ok('card: no opts → plain name, no co line', pop.indexOf('class="entq"') < 0 && pop.indexOf('appears with:') < 0);
 
+// --- v1.55.0 audit cycle 3 (§13): domain deny-list — TLD collisions with app bundles / JS props ---
+const denyScan = entScan('open Terminal.app then check request.host and navigator.online on demo.app via sqlalche.me');
+ok('deny: Terminal.app not a domain', !denyScan.some(e => e.k === 'domain' && e.v === 'terminal.app'));
+ok('deny: request.host not a domain', !denyScan.some(e => e.k === 'domain' && e.v === 'request.host'));
+ok('deny: navigator.online not a domain', !denyScan.some(e => e.k === 'domain' && e.v === 'navigator.online'));
+ok('deny: real .app domain survives', denyScan.some(e => e.k === 'domain' && e.v === 'demo.app'));
+ok('deny: real .me domain survives (sqlalche.me)', denyScan.some(e => e.k === 'domain' && e.v === 'sqlalche.me'));
+
 console.log((failed ? 'FAILED ' : 'OK ') + (n - failed) + '/' + n + ' entity checks');
 process.exit(failed ? 1 : 0);

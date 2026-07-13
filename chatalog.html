@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>colloquary — search your Claude &amp; ChatGPT chats, turn them into skills — 100% local</title>
-<meta name="description" content="Browse and search your Claude & ChatGPT chats (plus Claude Code / Cowork sessions) — messages, attachments and project files. Ask questions about your history, see your stats — and turn your chats into reusable skills. All local, in this browser; nothing is uploaded.">
+<meta name="description" content="Search your Claude & ChatGPT chats 100% locally — nothing is uploaded. Browse, ask questions, see your stats, and turn your chats into reusable skills.">
 <link rel="canonical" href="https://colloquary.com/">
 <meta property="og:title" content="colloquary — search your Claude & ChatGPT chats, turn them into skills">
 <meta property="og:description" content="A private, searchable library of your AI conversations: browse and full-text search chats AND attached files, ask questions about your history, see your stats — and compile your chats into reusable skills. Everything stays in this browser; nothing is uploaded.">
@@ -3399,7 +3399,7 @@ self.onmessage = function (e) {
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.54.0'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.55.0'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -4077,15 +4077,18 @@ self.onmessage = function (e) {
       if (!pass.length) return; /* keyword-only render stands */
       var kwRank = out.slice().sort(function (a, b) { return b.rscore - a.rscore; }).map(function (h) { return h.id; });
       var fused = semRRF([kwRank, pass.map(function (s) { return s.id; })]);
-      var hmap = {};
+      var hmap = {}, added = 0;
       out.forEach(function (h) { hmap[h.id] = h; });
       pass.forEach(function (s) {
-        if (!hmap[s.id]) hmap[s.id] = { id: s.id, convUuid: s.convUuid, score: s.score, date: s.date, sem: true };
+        if (!hmap[s.id]) { hmap[s.id] = { id: s.id, convUuid: s.convUuid, score: s.score, date: s.date, sem: true }; added++; }
       });
       var out2 = [];
       for (var id in fused) { if (hmap[id]) { hmap[id].rscore = fused[id]; out2.push(hmap[id]); } }
+      /* audit cycle 3 (§11): count only matches NOT already in the keyword results — pass.length
+         over-counted by up to ~21% measured; 0 new is still useful (semantic re-ranked the order) */
       renderSearchResults(out2, titleOnly, groups, raw, matchedSet, ignoredFilterGroup,
-        ' · ≈ hybrid: ' + pass.length + ' semantic matches folded in');
+        added ? ' · ≈ hybrid: ' + added + ' semantic matches folded in'
+              : ' · ≈ hybrid: re-ranked (all semantic matches already found by keyword)');
     }).catch(function () { /* semantic failure must never break keyword search */ });
   }
 
@@ -5498,6 +5501,27 @@ self.onmessage = function (e) {
     };
   }
 
+  /* audit cycle 3 (§12) — round-robin the per-part selections into ONE deduped union (cap).
+     The old sequential fill + final slice let a broad first part starve the later parts to ZERO
+     while the coverage line still showed their pre-cap counts. Pure; test_summary.js.
+     Returns { order: [ids], perCount: [n per part — what each part ACTUALLY contributed] }. */
+  function mergeFill(sels, cap) {
+    var order = [], seen = {}, idxs = sels.map(function () { return 0; });
+    var perCount = sels.map(function () { return 0; }), progressed = true;
+    while (order.length < cap && progressed) {
+      progressed = false;
+      for (var pi = 0; pi < sels.length && order.length < cap; pi++) {
+        while (idxs[pi] < sels[pi].length) {
+          var u = sels[pi][idxs[pi]++];
+          if (seen[u]) continue; /* overlap counts for whichever part reached it first */
+          seen[u] = 1; order.push(u); perCount[pi]++; progressed = true;
+          break;
+        }
+      }
+    }
+    return { order: order, perCount: perCount };
+  }
+
   /* preview in the reader + zip + download a .skill (shared by me.skill and compile-a-skill) */
   function deliverSkill(previewName, fullName, md, coverage) {
     var today = new Date().toISOString().slice(0, 10);
@@ -5757,7 +5781,16 @@ self.onmessage = function (e) {
   function entRules() {
     if (entRules._r) return entRules._r;
     var tlds = 'com net org io dev app cc ai co de ro uk eu me sh xyz tools info cloud host site tech online store fr it es nl at ch us ca'.split(' ');
+    /* audit cycle 3 (§13): exact-match deny-list — macOS app bundles + JS property accesses that
+       collide with the TLD allowlist (.app/.host/.site/.online). Deny EXACT tokens only; dropping
+       the TLDs would kill real domains (sqlalche.me is real). */
+    var deny = {};
+    ('terminal.app finder.app safari.app chrome.app firefox.app preview.app textedit.app word.app ' +
+     'excel.app powerpoint.app notes.app mail.app photos.app numbers.app keynote.app pages.app ' +
+     'xcode.app window.app update.app request.host window.host location.host document.host ' +
+     'navigator.online p.site product.site').split(' ').forEach(function (d) { deny[d] = 1; });
     entRules._r = {
+      deny: deny,
       domain: new RegExp('\\b(?:[a-z0-9][a-z0-9-]{0,62}\\.)+(?:' + tlds.join('|') + ')\\b', 'gi'),
       ip: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
       repo: /\b([\w-]+)\.git\b|\b(?:github|gitlab|bitbucket)\.com\/([\w][\w./-]*)/gi,
@@ -5768,7 +5801,10 @@ self.onmessage = function (e) {
   function entScan(text) {
     var R = entRules(), out = [], m, t = String(text || '');
     R.domain.lastIndex = 0;
-    while ((m = R.domain.exec(t))) out.push({ k: 'domain', v: m[0].toLowerCase() });
+    while ((m = R.domain.exec(t))) {
+      var dv = m[0].toLowerCase();
+      if (!R.deny[dv]) out.push({ k: 'domain', v: dv });
+    }
     R.ip.lastIndex = 0;
     while ((m = R.ip.exec(t))) {
       if (m[0].split('.').every(function (o) { return +o <= 255; })) out.push({ k: 'ip', v: m[0] });
@@ -7469,9 +7505,9 @@ self.onmessage = function (e) {
         }
       }
       /* per-part selection (each part keeps its own adaptive floor + the ≥2-passage "about" rule),
-         then the union, deduped in part order */
-      var chosen = [], seen = {}, perCount = [];
-      parts.forEach(function (p, pi) {
+         then a ROUND-ROBIN union via mergeFill — audit cycle 3 (§12): the old part-order fill +
+         final slice starved later parts to zero while perCount showed their pre-cap numbers */
+      var sels = parts.map(function (p, pi) {
         var hits = scans[pi], stp = hits.qstats;
         var floor = stp ? semLensFloor(stp.best, stp.median) : 0.76;
         var byConv = {}, order = [];
@@ -7481,14 +7517,11 @@ self.onmessage = function (e) {
           byConv[h.convUuid]++;
         });
         var strong = order.filter(function (u) { return byConv[u] >= 2; });
-        var sel = (strong.length >= 8 ? strong : order).slice(0, 150);
-        perCount.push(sel.length);
-        sel.forEach(function (u) {
-          if (seen[u]) return; seen[u] = 1;
-          var c = state.convs.get(u); if (c) chosen.push(c);
-        });
+        return (strong.length >= 8 ? strong : order).slice(0, 150);
       });
-      chosen = chosen.slice(0, 150);
+      var fill = mergeFill(sels, 150);
+      var perCount = fill.perCount;
+      var chosen = fill.order.map(function (u) { return state.convs.get(u); }).filter(Boolean);
       if (chosen.length < 3) { hideProgress(); toast('Not enough “' + recipe.label + '” conversations to distill a skill — try a broader phrase.', true); return; }
       showProgress(lab + ' — distilling the pattern…', 97);
       /* kw = the OR of the parts' predicates (preset regex, or derived from that part's phrase) */

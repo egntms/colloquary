@@ -172,5 +172,22 @@ ok('merged kw keeps coding', mOr('git push to deploy on the vps'));
 ok('merged kw keeps design', mOr('center the button, more padding'));
 ok('merged kw drops off-topic', !mOr('what should i price the pro tier at'));
 
+// --- v1.55.0 audit cycle 3 (§12): mergeFill — round-robin union, no part starvation ---
+const idsA = Array.from({ length: 200 }, (_, i) => 'a' + i);
+const idsB = Array.from({ length: 60 }, (_, i) => 'b' + i);
+const mf = mergeFill([idsA, idsB], 150);
+ok('mergeFill: cap respected', mf.order.length === 150);
+ok('mergeFill: later part NOT starved (all 60 of B in)', mf.perCount[1] === 60 && mf.perCount[0] === 90);
+ok('mergeFill: perCount sums to what shipped', mf.perCount[0] + mf.perCount[1] === mf.order.length);
+const mfR = mergeFill([idsB, idsA], 150);
+ok('mergeFill: order flip keeps both parts (B 60 · A 90)', mfR.perCount[0] === 60 && mfR.perCount[1] === 90);
+const mfOv = mergeFill([['x1', 'x2', 'x3'], ['x2', 'y1']], 150);
+/* round-robin: B reaches x2 in round 1 before A does in round 2 — overlap counts for whoever gets there first */
+ok('mergeFill: overlap deduped, counted once', mfOv.order.length === 4 && mfOv.perCount[0] === 2 && mfOv.perCount[1] === 2 && mfOv.perCount[0] + mfOv.perCount[1] === mfOv.order.length);
+const mfOne = mergeFill([idsA.slice(0, 150)], 150);
+ok('mergeFill: single part = passthrough', mfOne.order.length === 150 && mfOne.perCount[0] === 150 && mfOne.order[0] === 'a0' && mfOne.order[149] === 'a149');
+const mfBoth = mergeFill([idsA, Array.from({ length: 180 }, (_, i) => 'c' + i)], 150);
+ok('mergeFill: two broad parts split the cap 75/75', mfBoth.perCount[0] === 75 && mfBoth.perCount[1] === 75);
+
 console.log((failed ? 'FAILED ' : 'OK ') + (n - failed) + '/' + n + ' assertions');
 process.exit(failed ? 1 : 0);
