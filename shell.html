@@ -126,8 +126,8 @@ input[type=file] { display: none; }
 
 #count { font-family: var(--mono); font-size: .73rem; color: var(--muted); margin: .8rem 0 .55rem; }
 #countrow { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
-#dossier-btn, #summary-btn { font-family: var(--mono); font-size: .68rem; color: var(--ledger); background: none; border: 1px solid var(--hair); border-radius: 4px; padding: .1rem .45rem; cursor: pointer; }
-#dossier-btn:hover, #summary-btn:hover { border-color: var(--ledger); }
+#dossier-btn, #summary-btn, #stats-btn { font-family: var(--mono); font-size: .68rem; color: var(--ledger); background: none; border: 1px solid var(--hair); border-radius: 4px; padding: .1rem .45rem; cursor: pointer; }
+#dossier-btn:hover, #summary-btn:hover, #stats-btn:hover { border-color: var(--ledger); }
 .toolrow { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin-top: .55rem; }
 .tr-label { font-family: var(--mono); font-size: .66rem; color: var(--muted); margin-right: .15rem; }
 .tr-sep { flex: 0 0 1px; height: .9rem; background: var(--hair); margin: 0 .3rem; }
@@ -584,7 +584,7 @@ a.fchip { text-decoration: none; }
     <button class="ask" data-q="how many hours yesterday">how many hours yesterday</button>
   </div>
   <div id="src-tabs"></div>
-  <div id="countrow"><p id="count"></p><button id="dossier-btn" hidden title="Download the conversations below as ONE chronological markdown file — readable, and attachable to a fresh AI chat as context">&#11015; dossier</button><button id="summary-btn" hidden title="Summarize the conversations below — an extract in your own words, opened in the reader">summary</button></div>
+  <div id="countrow"><p id="count"></p><button id="dossier-btn" hidden title="Download the conversations below as ONE chronological markdown file — readable, and attachable to a fresh AI chat as context">&#11015; dossier</button><button id="summary-btn" hidden title="Summarize the conversations below — an extract in your own words, opened in the reader">summary</button><button id="stats-btn" hidden title="Stats for the conversations below — same as Stats in the top bar, scoped to this result set">stats</button></div>
   <div id="answer"></div>
   <div id="results"></div>
 

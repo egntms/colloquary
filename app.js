@@ -117,7 +117,7 @@
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.55.0'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.55.1'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -922,9 +922,10 @@
   function setDossier(convs, label) {
     state.dossier = (convs && convs.length) ? { convs: convs, label: label || 'archive' } : null;
     var n = state.dossier ? convs.length : 0;
-    var b = $('#dossier-btn'), s = $('#summary-btn');
+    var b = $('#dossier-btn'), s = $('#summary-btn'), st = $('#stats-btn');
     if (b) { b.hidden = !state.dossier; if (state.dossier) b.textContent = '⬇ dossier (' + n + ')'; }
     if (s) { s.hidden = !state.dossier; if (state.dossier) s.textContent = 'summary (' + n + ')'; }
+    if (st) { st.hidden = !state.dossier; if (state.dossier) st.textContent = 'stats (' + n + ')'; } /* v1.55.1 — discoverability: openStats already follows this set via viewScope */
   }
 
   function buildDossier(convs, label) {
@@ -5095,6 +5096,11 @@
       if (!state.dossier) return;
       previewSummary('Summary — ' + state.dossier.label, buildSetSummary(state.dossier.convs, state.dossier.label));
       toast('Extractive summary of ' + state.dossier.convs.length + ' conversation' + (state.dossier.convs.length === 1 ? '' : 's') + ' — your words only. Save PDF to keep it.');
+    });
+
+    $('#stats-btn').addEventListener('click', function () {
+      if (!state.dossier) return;
+      openStats(); /* viewScope() reads state.dossier — the stats are over exactly the result set shown */
     });
 
     $('#reader-summary-btn').addEventListener('click', function () {
