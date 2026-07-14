@@ -117,7 +117,7 @@
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.57.2'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.57.3'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -3514,7 +3514,16 @@
     /* v1.56.1 (Eugen: "loading bar … same loading partial") — one-shot phases have NO real number;
        a determinate bar frozen at a made-up 60 reads as stuck. pct=null → honest indeterminate pulse. */
     if (pct == null) { bar.classList.add('indet'); bar.style.width = '40%'; }
-    else { bar.classList.remove('indet'); bar.style.width = pct + '%'; }
+    else {
+      /* v1.57.3 — leaving indet: the width transition animated 100%→55% as a right-to-left shrink
+         (Eugen's "backwards model loading", third sighting — the transition, not the keyframes) */
+      if (bar.classList.contains('indet')) {
+        bar.classList.remove('indet');
+        bar.style.transition = 'none'; bar.style.width = pct + '%';
+        void bar.offsetWidth; /* flush so the width applies un-animated */
+        bar.style.transition = '';
+      } else bar.style.width = pct + '%';
+    }
   }
   function hideProgress() { $('#progress').style.display = 'none'; $('#progress-bar').classList.remove('indet'); }
 
