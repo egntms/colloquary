@@ -117,7 +117,7 @@
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.56.3'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.57.0'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -3796,6 +3796,48 @@
     }).catch(function () { return 'model cached: ?'; });
   }
 
+  /* v1.57.0 — model files THIS device can actually load, per registered model (mirrors semLoad's
+     device branches). Anything else in the cache is dead weight — e.g. the 224 MB desktop fp16
+     found parked on Eugen's iPhone (pre-07-09 residue iOS never purged, while it DID evict his
+     vectors twice). Used by the self-test's free-space offer. */
+  function semCacheUsableFiles() {
+    var names = ['tokenizer.json'];
+    Object.keys(SEM_MODELS).forEach(function (k) {
+      var M = SEM_MODELS[k];
+      if (M.NATIVE_DIMS) { /* gemma family: q4 graph + the device's weights export */
+        names.push('model_q4.onnx');
+        names.push((isIOS() && M.MODEL_IOS) ? 'model_no_gather_q4.onnx_data' : 'model_q4.onnx_data');
+      } else { /* e5 family: q8 everywhere; fp16 only where webgpu can hold it */
+        names.push('model_quantized.onnx');
+        if (!isIOS()) names.push('model_fp16.onnx');
+      }
+    });
+    return names;
+  }
+  function semCachePrune(dry) { /* {n, mb} — model files no registered model on THIS device can load; dry=count only */
+    if (!(self.caches && caches.keys)) return Promise.resolve({ n: 0, mb: 0 });
+    var usable = semCacheUsableFiles();
+    var n = 0, bytes = 0;
+    return caches.keys().then(function (namesL) {
+      return Promise.all(namesL.map(function (nm) {
+        return caches.open(nm).then(function (c) {
+          return c.keys().then(function (reqs) {
+            return Promise.all(reqs.filter(function (rq) { return /\.onnx(_data)?(\?|$)/.test(rq.url); })
+              .map(function (rq) {
+                var base = rq.url.split('?')[0].split('/').pop();
+                if (usable.indexOf(base) >= 0) return null;
+                return c.match(rq).then(function (res) {
+                  bytes += (res && +res.headers.get('content-length')) || 0;
+                  if (dry) { n++; return; }
+                  return c.delete(rq).then(function (okd) { if (okd) n++; });
+                });
+              }));
+          });
+        });
+      }));
+    }).then(function () { return { n: n, mb: bytes / 1048576 }; });
+  }
+
   /* iPhone/iPad — incl. iPadOS masquerading as "MacIntel" with touch. iOS REPORTS navigator.gpu=true
      but its WebGPU can't hold the 235 MB fp16 model (tab gets memory-killed → the "keeps reloading, no
      toast" bug — a crash, not a catchable error). So on iOS we force the lighter q8 wasm path. */
@@ -4976,6 +5018,14 @@
         })).then(function (lines) {
           Promise.all([pP, cP]).then(function (pc) {
             alert('colloquary semantic self-test\n\n' + env0 + env + '\npersistent storage: ' + pc[0] + '\n' + pc[1] + '\n\n' + lines.join('\n'));
+            /* v1.57.0 — free-space offer: files no model on THIS device can load (e.g. desktop fp16
+               parked on a phone). Explicit confirm; the self-test is where "model cached" lives. */
+            semCachePrune(true).then(function (d) {
+              if (!d.n) return;
+              if (confirm(d.n + ' model file' + (d.n > 1 ? 's' : '') + ' in the cache can never load on this device (' + d.mb.toFixed(1) + ' MB — e.g. a desktop-only model on a phone). Delete to free the space? Anything still needed re-downloads on demand.')) {
+                semCachePrune().then(function (r) { toast('Freed ' + r.mb.toFixed(1) + ' MB (' + r.n + ' file' + (r.n > 1 ? 's' : '') + ').'); });
+              }
+            });
           });
         });
       },
