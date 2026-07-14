@@ -3401,7 +3401,7 @@ self.onmessage = function (e) {
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.57.3'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.57.4'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -6779,7 +6779,9 @@ self.onmessage = function (e) {
   (function () {
     try {
       var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
-      var l = blogRead(), last = l.length ? l[l.length - 1] : '';
+      /* v1.57.4 — a visibilitychange can land AFTER pagehide (live-caught: a clean reload flagged
+         ABRUPT); a clean exit counts if pagehide is anywhere in the last 3 lines */
+      var l = blogRead(), last = l.slice(-3).join(' | ');
       if (l.length && !/pagehide/.test(last)) {
         blog('BOOT (' + (nav.type || '?') + ') — PREVIOUS SESSION ENDED ABRUPTLY (no pagehide → likely an iOS memory kill)');
         state.bootAbrupt = true; /* v1.57.2 — the abrupt-boot fact drives the query restore */
@@ -7022,6 +7024,19 @@ self.onmessage = function (e) {
         var tx = d.transaction('vecs', 'readwrite');
         var st = tx.objectStore('vecs');
         for (var i = 0; i < pairs.length; i++) st.put(pairs[i][1], pairs[i][0]);
+        tx.oncomplete = function () { res(); };
+        tx.onerror = function () { rej(tx.error); };
+      });
+    });
+  }
+  /* v1.57.4 — delete ONE model's vectors (range) — storage hygiene for the model you don't run on
+     this device (Eugen's gemma experiment left 33 MB of unused vectors adding origin pressure on
+     iOS). Re-importing that model's .cvec restores them. */
+  function semVecDeleteModel(mk) {
+    return semVecDB().then(function (d) {
+      return new Promise(function (res, rej) {
+        var tx = d.transaction('vecs', 'readwrite');
+        tx.objectStore('vecs').delete(semKeyRange(mk));
         tx.oncomplete = function () { res(); };
         tx.onerror = function () { rej(tx.error); };
       });
@@ -8385,6 +8400,21 @@ self.onmessage = function (e) {
               if (confirm(d.n + ' model file' + (d.n > 1 ? 's' : '') + ' in the cache can never load on this device (' + d.mb.toFixed(1) + ' MB — e.g. a desktop-only model on a phone). Delete to free the space? Anything still needed re-downloads on demand.')) {
                 semCachePrune().then(function (r) { toast('Freed ' + r.mb.toFixed(1) + ' MB (' + r.n + ' file' + (r.n > 1 ? 's' : '') + ').'); });
               }
+            });
+            /* v1.57.4 — same idea one layer down: vectors of a model this device isn't running */
+            Object.keys(SEM_MODELS).forEach(function (mk2) {
+              var M = SEM_MODELS[mk2];
+              if (M.MODEL_KEY === SEM.MODEL_KEY) return; /* the active model stays */
+              semVecCount(M.MODEL_KEY).then(function (n) {
+                if (!n) return;
+                var mb = (n * M.DIMS * 4 / 1048576).toFixed(0);
+                if (confirm(n.toLocaleString() + ' ' + M.LABEL + ' vectors are stored on this device (~' + mb + ' MB) but the active model is ' + SEM.LABEL + '. Delete them to lighten storage? Importing that model’s .cvec restores them anytime.')) {
+                  semVecDeleteModel(M.MODEL_KEY).then(
+                    function () { toast('Deleted ' + n.toLocaleString() + ' ' + M.LABEL + ' vectors (~' + mb + ' MB).'); },
+                    function () { toast('Could not delete those vectors — try again.', true); }
+                  );
+                }
+              });
             });
           });
         });
