@@ -248,7 +248,7 @@ mark { background: var(--mark); padding: 0 .1em; border-radius: 1px; }
 #progress-track { height: 4px; background: rgba(255,255,255,.25); border-radius: 2px; }
 #progress-bar { height: 100%; width: 0; background: var(--mark); border-radius: 2px; transition: width .25s; }
 #progress-bar.indet { width: 100% !important; animation: indet 1.4s ease-in-out infinite; } /* full-width BREATHE — any moving partial segment reads as a stuck fraction (v1.56.3, Eugen's two catches) */
-@keyframes indet { 0% { opacity: .3; } 50% { opacity: 1; } 100% { opacity: .3; } }
+@keyframes indet { 0% { opacity: .15; } 50% { opacity: .45; } 100% { opacity: .15; } } /* v1.57.1: DIM — a bright full bar handing over to a 55% determinate fill read as "going backwards"; dim→bright now reads forward */
 
 #toast {
   position: fixed; top: 1rem; left: 50%; transform: translateX(-50%) translateY(-220%);

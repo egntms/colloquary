@@ -117,7 +117,7 @@
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.57.0'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.57.1'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -750,6 +750,7 @@
     if (!semRun.docs) {
       if (!semDocsArmed && !semRun.busy) {
         semDocsArmed = true;
+        blog('vectors arm START');
         showProgress('Semantic: loading your vectors…', null); /* one-shot (v1.56.1) */
         /* v1.50.3 (live-caught: "stuck on loading your vectors"): a phone must never enter the
            embed pipeline here — since v1.52.0 that rule lives INSIDE semEnsureDocs (the one choke
@@ -757,8 +758,8 @@
            the progress line before the synchronous doc pass (the v1.50.0 lesson). */
         setTimeout(function () {
           semEnsureDocs().then(
-            function (ok) { hideProgress(); semDocsArmed = false; if (ok) runSearch(); },
-            function () { hideProgress(); semDocsArmed = false; }
+            function (ok) { blog('vectors arm DONE (' + (ok ? 'ok' : 'empty') + ')'); hideProgress(); semDocsArmed = false; if (ok) runSearch(); },
+            function () { blog('vectors arm FAILED'); hideProgress(); semDocsArmed = false; }
           );
         }, 50);
       }
@@ -3458,6 +3459,35 @@
     });
   }
 
+  /* ---- v1.57.1 boot/reload FLIGHT RECORDER (Eugen: "log when reloading, for you to have info") ----
+     A localStorage ring: writes are SYNCHRONOUS, so the last lines survive an iOS memory kill
+     (IndexedDB's async write would be lost with the tab). LOCAL ONLY, ~40 lines, shown in the
+     self-test, wiped by Clear data. The one question it answers: did the last session end with a
+     clean pagehide (user left) or ABRUPTLY (iOS killed the tab)? */
+  function blog(ev) {
+    try {
+      var l = JSON.parse(localStorage.getItem('chatalog-bootlog') || '[]');
+      l.push(new Date().toISOString().slice(5, 19).replace('T', ' ') + ' ' + ev);
+      while (l.length > 40) l.shift();
+      localStorage.setItem('chatalog-bootlog', JSON.stringify(l));
+    } catch (e) { /* private mode / quota — best effort */ }
+  }
+  function blogRead() {
+    try { return JSON.parse(localStorage.getItem('chatalog-bootlog') || '[]'); } catch (e) { return []; }
+  }
+  (function () {
+    try {
+      var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
+      var l = blogRead(), last = l.length ? l[l.length - 1] : '';
+      if (l.length && !/pagehide/.test(last)) blog('BOOT (' + (nav.type || '?') + ') — PREVIOUS SESSION ENDED ABRUPTLY (no pagehide → likely an iOS memory kill)');
+      else blog('BOOT (' + (nav.type || '?') + ')');
+    } catch (e) { /* recorder must never break boot */ }
+    addEventListener('pagehide', function () { blog('pagehide (clean exit)'); });
+    document.addEventListener('visibilitychange', function () { blog('visibility → ' + document.visibilityState); });
+    addEventListener('error', function (e) { blog('ERROR: ' + String((e && e.message) || '').slice(0, 90)); });
+    addEventListener('unhandledrejection', function (e) { blog('REJECTION: ' + String((e && e.reason && e.reason.message) || (e && e.reason) || '').slice(0, 90)); });
+  })();
+
   function showProgress(stage, pct) {
     $('#progress').style.display = 'block';
     $('#progress-label').textContent = stage;
@@ -3861,6 +3891,8 @@
         report('Loading model — ' + Math.round(p.progress || 0) + '%');
       }
     };
+    var blogT0 = Date.now();
+    blog('model load START (' + SEM.LABEL + (isIOS() ? ', iOS' : '') + ')');
     semLoading = import(SEM.LIB).then(function (T) {
       T.env.allowRemoteModels = false;      /* local webroot ONLY — never the HF hub */
       T.env.allowLocalModels = true;        /* v3 defaults this to FALSE in browsers (live-caught 2026-07-08) */
@@ -3900,6 +3932,8 @@
       semExtractor = r.ex; semDevice = r.device; semLoading = null;
       reqPersist(); /* v1.55.2 — the model is now in Cache Storage; without persist iOS purges it
         with the reclaimed tab and the next ≈ search re-downloads ~113 MB (Eugen's live catch) */
+      var blogS = Math.round((Date.now() - blogT0) / 1000);
+      blog('model READY (' + r.device + ') in ' + blogS + 's' + (blogS < 15 ? ' — cache-speed' : ' — network-speed'));
       report('Model ready (' + r.device + ')');
       return r.ex;
     }, function (err) {
@@ -5017,7 +5051,8 @@
           }, function (e) { return c[0] + ': FETCH FAILED (' + ((e && e.message) || e) + ')'; });
         })).then(function (lines) {
           Promise.all([pP, cP]).then(function (pc) {
-            alert('colloquary semantic self-test\n\n' + env0 + env + '\npersistent storage: ' + pc[0] + '\n' + pc[1] + '\n\n' + lines.join('\n'));
+            var bl = blogRead().slice(-14); /* v1.57.1 — the flight recorder, latest first-hand evidence */
+            alert('colloquary semantic self-test\n\n' + env0 + env + '\npersistent storage: ' + pc[0] + '\n' + pc[1] + '\n\n' + lines.join('\n') + (bl.length ? '\n\nboot log (last ' + bl.length + '):\n' + bl.join('\n') : ''));
             /* v1.57.0 — free-space offer: files no model on THIS device can load (e.g. desktop fp16
                parked on a phone). Explicit confirm; the self-test is where "model cached" lives. */
             semCachePrune(true).then(function (d) {
@@ -5094,6 +5129,7 @@
              clear them too (privacy invariant), plus the toggle and its persisted state */
           semRun.docs = null; semRun.vecs = null; semVdbP = null;
           try { indexedDB.deleteDatabase('chatalog-vectors'); } catch (e) { /* best effort */ }
+          try { localStorage.removeItem('chatalog-bootlog'); } catch (e) { /* v1.57.1 — the recorder goes too */ }
           state.semOn = false; setMeta('semOn', false);
           $('#sem-toggle').hidden = true;
           renderStats(); runSearch(); toast('Local archive cleared (semantic vectors included).');
