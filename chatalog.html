@@ -247,8 +247,8 @@ mark { background: var(--mark); padding: 0 .1em; border-radius: 1px; }
 #progress-label { font-family: var(--mono); font-size: .75rem; display: block; margin-bottom: .45rem; }
 #progress-track { height: 4px; background: rgba(255,255,255,.25); border-radius: 2px; }
 #progress-bar { height: 100%; width: 0; background: var(--mark); border-radius: 2px; transition: width .25s; }
-#progress-bar.indet { animation: indet 1.2s ease-in-out infinite; }
-@keyframes indet { 0% { margin-left: 0; } 50% { margin-left: 60%; } 100% { margin-left: 0; } }
+#progress-bar.indet { animation: indet 1.1s linear infinite; }
+@keyframes indet { 0% { margin-left: -40%; } 100% { margin-left: 100%; } } /* one-directional sweep — out-and-back read as "stuck at half" (v1.56.2) */
 
 #toast {
   position: fixed; top: 1rem; left: 50%; transform: translateX(-50%) translateY(-220%);
@@ -3401,7 +3401,7 @@ self.onmessage = function (e) {
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.56.1'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.56.2'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -6895,10 +6895,14 @@ self.onmessage = function (e) {
       perConv[s.convUuid] = (perConv[s.convUuid] || 0) + 1;
       if (!(s.convUuid in bestRank)) bestRank[s.convUuid] = r;
     });
-    var rich = kwCount >= 50, cap = rich ? 10 : 40;
+    /* v3 (v1.56.2, Eugen's re-test: ONE new-conv straggler cracked the top-10): when keyword is
+       RICH the user's exact words already found the conversations — ≈ re-ranks and enriches THOSE;
+       it opens NEW conversations only when keyword comes back thin (the paraphrase-rescue case). */
+    var rich = kwCount >= 50;
     return pass.filter(function (s) {
       if (kwIds[s.convUuid]) return true;
-      return bestRank[s.convUuid] < cap || (!rich && perConv[s.convUuid] >= 2);
+      if (rich) return false;
+      return bestRank[s.convUuid] < 40 || perConv[s.convUuid] >= 2;
     });
   }
   /* Reciprocal Rank Fusion (pure, node-tested): array of ranked id lists → {id: fused score}.

@@ -117,7 +117,7 @@
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.56.1'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.56.2'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -3611,10 +3611,14 @@
       perConv[s.convUuid] = (perConv[s.convUuid] || 0) + 1;
       if (!(s.convUuid in bestRank)) bestRank[s.convUuid] = r;
     });
-    var rich = kwCount >= 50, cap = rich ? 10 : 40;
+    /* v3 (v1.56.2, Eugen's re-test: ONE new-conv straggler cracked the top-10): when keyword is
+       RICH the user's exact words already found the conversations — ≈ re-ranks and enriches THOSE;
+       it opens NEW conversations only when keyword comes back thin (the paraphrase-rescue case). */
+    var rich = kwCount >= 50;
     return pass.filter(function (s) {
       if (kwIds[s.convUuid]) return true;
-      return bestRank[s.convUuid] < cap || (!rich && perConv[s.convUuid] >= 2);
+      if (rich) return false;
+      return bestRank[s.convUuid] < 40 || perConv[s.convUuid] >= 2;
     });
   }
   /* Reciprocal Rank Fusion (pure, node-tested): array of ranked id lists → {id: fused score}.
