@@ -3399,7 +3399,7 @@ self.onmessage = function (e) {
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.55.1'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.55.2'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -6598,7 +6598,7 @@ self.onmessage = function (e) {
       '<li><strong>Can you see my searches or archive?</strong> No. Nothing phones home; there are no analytics. The server sees only standard access logs for static files. Details: the privacy page.</li>' +
       '<li><strong>How do I delete everything?</strong> Top bar \u2192 <strong>Clear data</strong> \u2014 wipes the archive AND semantic vectors from this browser. Your exports and accounts are untouched.</li>' +
       '<li><strong>Does it work offline?</strong> Yes, after first load.</li>' +
-      '<li><strong>Can I use it on my phone?</strong> Yes: <strong>Download archive</strong> \u2192 one .zip \u2192 open colloquary on the phone and drop it there. For semantic on the phone: embed on desktop \u2192 <strong>Download embeddings</strong> (.cvec) \u2192 <strong>Import embeddings</strong> on the phone. Use an <strong>e5</strong> .cvec \u2014 e5 (~118 MB model) is the one that runs on phones (Gemma\u2019s model doesn\u2019t load on iOS today; the app says so and offers the way back).</li>' +
+      '<li><strong>Can I use it on my phone?</strong> Yes: <strong>Download archive</strong> \u2192 one .zip \u2192 open colloquary on the phone and drop it there. For semantic on the phone: embed on desktop \u2192 <strong>Download embeddings</strong> (.cvec) \u2192 <strong>Import embeddings</strong> on the phone. Use an <strong>e5</strong> .cvec \u2014 e5 (~118 MB model) is the one that runs on phones (Gemma\u2019s model doesn\u2019t load on iOS today; the app says so and offers the way back). One iOS habit to know: when Safari reclaims a background tab it may also clear the downloaded model, so the next \u2248 search downloads it again \u2014 colloquary asks iOS for persistent storage (the self-test shows whether it was granted), and adding the site to your Home Screen can help iOS keep it.</li>' +
       '<li><strong>Why is the semantic download large (~120\u2013240 MB)?</strong> That IS the AI model, served from this domain and run on your device \u2014 the price of nothing leaving your browser. One-time.</li>' +
       '<li><strong>Is it open source? Can I verify any of this?</strong> Yes, and please do \u2014 that\u2019s why the code ships readable. The page you\u2019re on <em>is</em> the source (one unminified HTML file: View Source). Same code at <a href="' + SRC_URL + '" target="_blank" rel="noopener">github.com/egntms/colloquary</a> (AGPL-3.0). Two more checks: DevTools \u2192 Network while you use it (nothing goes out), or just go offline and keep working.</li></ul>');
     h.push('<h3>Skills & compile</h3><ul>' +
@@ -7009,6 +7009,32 @@ self.onmessage = function (e) {
 
   var semExtractor = null, semDevice = '', semLoading = null;
 
+  /* v1.55.2 — is the model actually in Cache Storage? iOS purges it without persistent storage, and
+     the re-download was invisible (Eugen: "left the tab, searched later — it downloads the llm again").
+     Read-only; used by the self-test. */
+  function semCacheInfo() {
+    if (!(self.caches && caches.keys)) return Promise.resolve('model cached: ? (no Cache Storage API)');
+    return caches.keys().then(function (names) {
+      var hits = [];
+      return Promise.all(names.map(function (nm) {
+        return caches.open(nm).then(function (c) {
+          return c.keys().then(function (reqs) {
+            return Promise.all(reqs.filter(function (rq) { return /\.onnx(_data)?(\?|$)/.test(rq.url); })
+              .map(function (rq) {
+                return c.match(rq).then(function (res) {
+                  hits.push((res && +res.headers.get('content-length')) || 0);
+                });
+              }));
+          });
+        });
+      })).then(function () {
+        if (!hits.length) return 'model cached: NO (next ≈ search downloads it)';
+        var tot = hits.reduce(function (a, b) { return a + b; }, 0) / 1048576;
+        return 'model cached: yes — ' + hits.length + ' file' + (hits.length > 1 ? 's' : '') + (tot ? ', ' + tot.toFixed(1) + ' MB' : '');
+      });
+    }).catch(function () { return 'model cached: ?'; });
+  }
+
   /* iPhone/iPad — incl. iPadOS masquerading as "MacIntel" with touch. iOS REPORTS navigator.gpu=true
      but its WebGPU can't hold the 235 MB fp16 model (tab gets memory-killed → the "keeps reloading, no
      toast" bug — a crash, not a catchable error). So on iOS we force the lighter q8 wasm path. */
@@ -7066,6 +7092,8 @@ self.onmessage = function (e) {
         });
     }).then(function (r) {
       semExtractor = r.ex; semDevice = r.device; semLoading = null;
+      reqPersist(); /* v1.55.2 — the model is now in Cache Storage; without persist iOS purges it
+        with the reclaimed tab and the next ≈ search re-downloads ~113 MB (Eugen's live catch) */
       report('Model ready (' + r.device + ')');
       return r.ex;
     }, function (err) {
@@ -8174,14 +8202,15 @@ self.onmessage = function (e) {
         var pP = (navigator.storage && navigator.storage.persisted)
           ? navigator.storage.persisted().catch(function () { return '?'; })
           : Promise.resolve('?');
+        var cP = semCacheInfo(); /* v1.55.2 — make the invisible re-download visible */
         Promise.all(checks.map(function (c) {
           return fetch(c[1], { method: 'HEAD' }).then(function (r) {
             var mb = (+r.headers.get('content-length') || 0) / 1048576;
             return c[0] + ': HTTP ' + r.status + (mb ? ' — ' + mb.toFixed(1) + ' MB' : '');
           }, function (e) { return c[0] + ': FETCH FAILED (' + ((e && e.message) || e) + ')'; });
         })).then(function (lines) {
-          pP.then(function (p) {
-            alert('colloquary semantic self-test\n\n' + env0 + env + '\npersistent storage: ' + p + '\n\n' + lines.join('\n'));
+          Promise.all([pP, cP]).then(function (pc) {
+            alert('colloquary semantic self-test\n\n' + env0 + env + '\npersistent storage: ' + pc[0] + '\n' + pc[1] + '\n\n' + lines.join('\n'));
           });
         });
       },
