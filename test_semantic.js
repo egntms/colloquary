@@ -160,19 +160,25 @@ ok(hd2.count === 1 && hd2.o === 4 + 1 + 2 + 2 + new TextEncoder().encode(SEM.MOD
 var hErr = ''; try { cvecHeader(new ArrayBuffer(16)); } catch (e) { hErr = e.message; }
 ok(/Not a colloquary embeddings/.test(hErr), 'cvecHeader rejects bad magic by name');
 
-// --- v1.56.0 (§11 F2): semFoldFilter — corroboration gate on the flat e5 tail ---
+// --- v1.56.1 (§11 F2 v2): semFoldFilter — KEYWORD-ANCHORED gate (v1's corroboration alone lost to
+// self-corroborating dense convs, live-verified) ---
 function fp(cu) { return { convUuid: cu }; }
-var fpass = [fp('a'), fp('b'), fp('a'), fp('c')].concat(
-  Array.from({ length: 30 }, function (_, i) { return fp(i % 2 ? 'a' : 'z' + i); }));
-var ff = semFoldFilter(fpass, 4);
-ok(ff.length === 4 + 15, 'fold gate: head kept whole + only corroborated (a×many) survive the tail');
-ok(ff.filter(function (s) { return /^z/.test(s.convUuid); }).length === 0, 'fold gate: singleton tail convs dropped');
-ok(ff[0].convUuid === 'a' && ff[1].convUuid === 'b', 'fold gate: order preserved');
-var fSingle = semFoldFilter([fp('x'), fp('y')], 20);
-ok(fSingle.length === 2, 'fold gate: everything inside the head passes untouched');
-var fCorr = semFoldFilter(Array.from({ length: 25 }, function (_, i) { return fp(i < 24 ? 'solo' + i : 'pair'); }).concat([fp('pair')]), 20);
-ok(fCorr.filter(function (s) { return s.convUuid === 'pair'; }).length === 2, 'fold gate: ≥2-passage conv survives beyond the head');
-ok(fCorr.filter(function (s) { return /^solo2[0-3]$/.test(s.convUuid); }).length === 0, 'fold gate: tail singletons beyond head dropped');
+function fill(n, pre, from) { return Array.from({ length: n }, function (_, i) { return fp(pre + (from + i)); }); }
+// rich keyword (kwCount 100 ≥ 50): new convs must crack rank<10; kw-supported fold freely
+// ranks: kwA=0 · new0..new9=1..10 · dense×3=11,12,13 · kwB=14
+var rp = [fp('kwA')].concat(fill(10, 'new', 0)).concat([fp('dense'), fp('dense'), fp('dense')]).concat([fp('kwB')]);
+var rr = semFoldFilter(rp, { kwA: 1, kwB: 1 }, 100);
+ok(rr.filter(function (s) { return s.convUuid === 'kwA' || s.convUuid === 'kwB'; }).length === 2, 'fold v2 rich: kw-supported convs fold freely at any rank');
+ok(rr.filter(function (s) { return s.convUuid === 'dense'; }).length === 0, 'fold v2 rich: self-corroborating NEW conv beyond rank 10 dropped (the ML-Doc case)');
+ok(rr.filter(function (s) { return /^new[0-8]$/.test(s.convUuid); }).length === 9, 'fold v2 rich: new convs cracking the top-10 kept');
+ok(rr.some(function (s) { return s.convUuid === 'new9'; }) === false, 'fold v2 rich: new conv at rank 10 misses the cap');
+ok(rr[0].convUuid === 'kwA' && rr[1].convUuid === 'new0', 'fold v2: order preserved');
+// sparse keyword (kwCount 10 < 50): recall mode — cap 40 + the ≥2-passage rule
+var sp = fill(45, 's', 0).concat([fp('late'), fp('deepPair'), fp('x1'), fp('deepPair')]);
+var sr = semFoldFilter(sp, {}, 10);
+ok(sr.filter(function (s) { return /^s\d+$/.test(s.convUuid); }).length === 40, 'fold v2 sparse: new convs keep the top-40');
+ok(sr.some(function (s) { return s.convUuid === 'late'; }) === false && sr.some(function (s) { return s.convUuid === 'x1'; }) === false, 'fold v2 sparse: deep singletons dropped');
+ok(sr.filter(function (s) { return s.convUuid === 'deepPair'; }).length === 2, 'fold v2 sparse: ≥2-passage conv survives beyond the cap');
 
 console.log(checks - fails + '/' + checks + ' semantic checks passed');
 if (fails) process.exit(1);

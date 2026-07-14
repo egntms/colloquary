@@ -117,7 +117,7 @@
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.56.0'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.56.1'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -750,7 +750,7 @@
     if (!semRun.docs) {
       if (!semDocsArmed && !semRun.busy) {
         semDocsArmed = true;
-        showProgress('Semantic: loading your vectors…', 30);
+        showProgress('Semantic: loading your vectors…', null); /* one-shot (v1.56.1) */
         /* v1.50.3 (live-caught: "stuck on loading your vectors"): a phone must never enter the
            embed pipeline here — since v1.52.0 that rule lives INSIDE semEnsureDocs (the one choke
            point: iOS → read-only semRebuildFromStore, desktop → embed top-up). setTimeout = paint
@@ -796,7 +796,10 @@
         if (okAny) pass.push(sh);
       }
       if (!pass.length) return; /* keyword-only render stands */
-      pass = semFoldFilter(pass, 20); /* v1.56.0 — corroboration gate on the flat e5 tail (§11 F2) */
+      var kwIds = {};
+      out.forEach(function (h) { kwIds[h.convUuid] = 1; });
+      pass = semFoldFilter(pass, kwIds, out.length); /* v1.56.1 — keyword-anchored gate (§11 F2 v2) */
+      if (!pass.length) return; /* everything gated out — keyword render stands */
       var kwRank = out.slice().sort(function (a, b) { return b.rscore - a.rscore; }).map(function (h) { return h.id; });
       var fused = semRRF([kwRank, pass.map(function (s) { return s.id; })]);
       var hmap = {}, added = 0;
@@ -3456,9 +3459,13 @@
   function showProgress(stage, pct) {
     $('#progress').style.display = 'block';
     $('#progress-label').textContent = stage;
-    $('#progress-bar').style.width = pct + '%';
+    var bar = $('#progress-bar');
+    /* v1.56.1 (Eugen: "loading bar … same loading partial") — one-shot phases have NO real number;
+       a determinate bar frozen at a made-up 60 reads as stuck. pct=null → honest indeterminate pulse. */
+    if (pct == null) { bar.classList.add('indet'); bar.style.width = '40%'; }
+    else { bar.classList.remove('indet'); bar.style.width = pct + '%'; }
   }
-  function hideProgress() { $('#progress').style.display = 'none'; }
+  function hideProgress() { $('#progress').style.display = 'none'; $('#progress-bar').classList.remove('indet'); }
 
   var toastTimer = null;
   function toast(msg, isError) {
@@ -3591,10 +3598,24 @@
      one-great-hit paraphrase case), a conversation must place ≥2 passages in the candidate set (the
      calibrated cycle-2 "about" rule) or its stray passage is noise. Measured: drops 10–28 of 100
      per seed, incl. the live-caught 2023 junk ("ML Document Analysis"); rank-based → model-agnostic. */
-  function semFoldFilter(pass, head) {
-    var perConv = {};
-    pass.forEach(function (s) { perConv[s.convUuid] = (perConv[s.convUuid] || 0) + 1; });
-    return pass.filter(function (s, r) { return r < (head || 20) || perConv[s.convUuid] >= 2; });
+  function semFoldFilter(pass, kwIds, kwCount) {
+    /* v2 (2026-07-13 evening, measured — v1 survived Eugen's live junk): topically dense convs
+       SELF-corroborate (ML Document Analysis: 17 docs, pairwise 0.79–0.96 — ≥2 passages on any
+       dev query), so corroboration alone can't gate. The anchor is the KEYWORD side:
+       · hits in convs the keyword search already matched fold FREELY (they enrich real results);
+       · hits opening a NEW conv must crack the top ranks — top 10 when keyword found plenty
+         (≥50 matches = precision intent; measured junk best-ranks 34/59 = excluded, real
+         neighbors rank 0–9), top 40 + the ≥2-passage rule when keyword is sparse (recall mode). */
+    var perConv = {}, bestRank = {};
+    pass.forEach(function (s, r) {
+      perConv[s.convUuid] = (perConv[s.convUuid] || 0) + 1;
+      if (!(s.convUuid in bestRank)) bestRank[s.convUuid] = r;
+    });
+    var rich = kwCount >= 50, cap = rich ? 10 : 40;
+    return pass.filter(function (s) {
+      if (kwIds[s.convUuid]) return true;
+      return bestRank[s.convUuid] < cap || (!rich && perConv[s.convUuid] >= 2);
+    });
   }
   /* Reciprocal Rank Fusion (pure, node-tested): array of ranked id lists → {id: fused score}.
      Standard K=60: rank 1 in one list ≈ 0.0164; present near the top of BOTH lists beats a solo
@@ -4599,7 +4620,7 @@
          heavy loads at init either way (v1.50.2 lazy arm). */
       if (r[5] && SEM_MODELS[r[5]]) semSetModel(r[5]);
       if (state.convs.size) {
-        showProgress('Loading your archive…', 60);
+        showProgress('Loading your archive…', null); /* one-shot — no honest number exists (v1.56.1) */
         setTimeout(function () {
           ensureIndex().then(function () { hideProgress(); renderStats(); runSearch(); });
         }, 30);
@@ -4661,10 +4682,10 @@
       if (state.semOn) {
         semDisabled = false; /* a manual opt-in retries a previously-failed load */
         /* pay the model-init cost NOW, visibly — not in slices between keystrokes (freeze fix) */
-        showProgress('Semantic: loading…', 20);
+        showProgress('Semantic: loading…', null);
         Promise.all([
           semEnsureDocs(),
-          semLoad(function (s) { showProgress('Semantic: ' + s, 60); })
+          semLoad(function (s) { var m = /(\d+)\s*%/.exec(s); showProgress('Semantic: ' + s, m ? 55 + Math.min(45, +m[1] * 0.45) : null); })
         ]).then(
           function (r) { hideProgress(); if (r[0]) runSearch(); },
           function (err) { hideProgress(); semFailed(err); syncSemToggle(); }
