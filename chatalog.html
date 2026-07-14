@@ -3401,7 +3401,7 @@ self.onmessage = function (e) {
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.57.1'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.57.2'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -4031,6 +4031,23 @@ self.onmessage = function (e) {
        progress (same pattern as the model arm below). A memory crash during a user action recovers
        on reload; a crash at boot puts Safari in its "problem repeatedly occurred" page and blocks
        the whole site. */
+    /* v1.57.2 (recorder-proven: 18:26:28 model load START → :29 ABRUPT boot): on iOS the wasm
+       instantiate spike landing ON TOP of the ~50 MB resident vectors is what gets the tab killed.
+       Arm the MODEL FIRST — the spike happens while memory is still light; vectors follow. */
+    if (isIOS() && !semExtractor) {
+      if (!semReRunArmed) {
+        semReRunArmed = true;
+        var rrLast0 = null;
+        semLoad(function (s) {
+          var m = /(\d+)\s*%/.exec(s); if (m) rrLast0 = 55 + Math.min(45, +m[1] * 0.45);
+          showProgress('Semantic: ' + s, rrLast0);
+        }).then(
+          function () { hideProgress(); semReRunArmed = false; runSearch(); },
+          function (err) { hideProgress(); semReRunArmed = false; semFailed(err); }
+        );
+      }
+      return;
+    }
     if (!semRun.docs) {
       if (!semDocsArmed && !semRun.busy) {
         semDocsArmed = true;
@@ -6763,8 +6780,10 @@ self.onmessage = function (e) {
     try {
       var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
       var l = blogRead(), last = l.length ? l[l.length - 1] : '';
-      if (l.length && !/pagehide/.test(last)) blog('BOOT (' + (nav.type || '?') + ') — PREVIOUS SESSION ENDED ABRUPTLY (no pagehide → likely an iOS memory kill)');
-      else blog('BOOT (' + (nav.type || '?') + ')');
+      if (l.length && !/pagehide/.test(last)) {
+        blog('BOOT (' + (nav.type || '?') + ') — PREVIOUS SESSION ENDED ABRUPTLY (no pagehide → likely an iOS memory kill)');
+        state.bootAbrupt = true; /* v1.57.2 — the abrupt-boot fact drives the query restore */
+      } else blog('BOOT (' + (nav.type || '?') + ')');
     } catch (e) { /* recorder must never break boot */ }
     addEventListener('pagehide', function () { blog('pagehide (clean exit)'); });
     document.addEventListener('visibilitychange', function () { blog('visibility → ' + document.visibilityState); });
@@ -7985,6 +8004,19 @@ self.onmessage = function (e) {
          the phone follows the last imported .cvec's model (importEmbeddings persists it); nothing
          heavy loads at init either way (v1.50.2 lazy arm). */
       if (r[5] && SEM_MODELS[r[5]]) semSetModel(r[5]);
+      /* v1.57.2 — abrupt-boot query restore: if iOS killed the tab mid-search (recorder-flagged) and
+         the persisted query is fresh, put it back and re-run — the user returns mid-thought. Both
+         state.query AND the input are set (the v1.47.1 rc-run rule). */
+      if (state.bootAbrupt && state.convs.size) {
+        try {
+          var lq = JSON.parse(localStorage.getItem('chatalog-lastq') || 'null');
+          if (lq && lq.q && Date.now() - lq.t < 600000) {
+            state.query = lq.q; $('#search').value = lq.q; syncClear();
+            blog('query restored after abrupt end');
+            toast('Restored your search after the reload.');
+          }
+        } catch (e) { /* best effort */ }
+      }
       if (state.convs.size) {
         showProgress('Loading your archive…', null); /* one-shot — no honest number exists (v1.56.1) */
         setTimeout(function () {
@@ -8413,7 +8445,7 @@ self.onmessage = function (e) {
              clear them too (privacy invariant), plus the toggle and its persisted state */
           semRun.docs = null; semRun.vecs = null; semVdbP = null;
           try { indexedDB.deleteDatabase('chatalog-vectors'); } catch (e) { /* best effort */ }
-          try { localStorage.removeItem('chatalog-bootlog'); } catch (e) { /* v1.57.1 — the recorder goes too */ }
+          try { localStorage.removeItem('chatalog-bootlog'); localStorage.removeItem('chatalog-lastq'); } catch (e) { /* v1.57.1/.2 — recorder + saved query go too */ }
           state.semOn = false; setMeta('semOn', false);
           $('#sem-toggle').hidden = true;
           renderStats(); runSearch(); toast('Local archive cleared (semantic vectors included).');
@@ -8487,6 +8519,9 @@ self.onmessage = function (e) {
     };
     $('#search').addEventListener('input', function (e) {
       state.query = e.target.value;
+      /* v1.57.2 — sync-persist the in-flight query: an iOS memory kill mid-search reloads the page
+         with an empty box (Eugen: "the search typed disappears"); the abrupt-boot restore reads this */
+      try { localStorage.setItem('chatalog-lastq', JSON.stringify({ q: state.query, t: Date.now() })); } catch (err) { /* best effort */ }
       syncClear();
       clearTimeout(debounce);
       debounce = setTimeout(runSearchTimed, pvClamp(Math.round(lastSearchMs * 1.2), 120, 700));
