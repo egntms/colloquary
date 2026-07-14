@@ -117,7 +117,7 @@
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.55.2'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.56.0'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -771,7 +771,10 @@
     if (!semExtractor) {
       if (!semReRunArmed) {
         semReRunArmed = true;
-        semLoad(function (s) { showProgress('Semantic: ' + s, 60); }).then(
+        semLoad(function (s) { /* v1.56.0: the bar used to pin at 60 while the TEXT said 100% (Eugen's
+          catch); ride the real percent when one is present */
+          var m = /(\d+)\s*%/.exec(s); showProgress('Semantic: ' + s, m ? 55 + Math.min(45, +m[1] * 0.45) : 60);
+        }).then(
           function () { hideProgress(); semReRunArmed = false; runSearch(); },
           function (err) { hideProgress(); semReRunArmed = false; semFailed(err); }
         );
@@ -793,6 +796,7 @@
         if (okAny) pass.push(sh);
       }
       if (!pass.length) return; /* keyword-only render stands */
+      pass = semFoldFilter(pass, 20); /* v1.56.0 — corroboration gate on the flat e5 tail (§11 F2) */
       var kwRank = out.slice().sort(function (a, b) { return b.rscore - a.rscore; }).map(function (h) { return h.id; });
       var fused = semRRF([kwRank, pass.map(function (s) { return s.id; })]);
       var hmap = {}, added = 0;
@@ -3580,6 +3584,18 @@
     });
     return out;
   }
+  /* v1.56.0 fold-in noise gate (pure, node-tested) — MEASURED on the real 32,497-doc .cvec (audit
+     §11 F2): the e5 top-100 is a near-tie (rank-1 0.877 vs rank-100 0.862, corpus median 0.82), so
+     NO score floor can cut the junk tail — the midpoint gate kept 100/100 on all 15 seeds. What
+     separates signal is CORROBORATION: beyond the trusted head (first `head` ranks — the legit
+     one-great-hit paraphrase case), a conversation must place ≥2 passages in the candidate set (the
+     calibrated cycle-2 "about" rule) or its stray passage is noise. Measured: drops 10–28 of 100
+     per seed, incl. the live-caught 2023 junk ("ML Document Analysis"); rank-based → model-agnostic. */
+  function semFoldFilter(pass, head) {
+    var perConv = {};
+    pass.forEach(function (s) { perConv[s.convUuid] = (perConv[s.convUuid] || 0) + 1; });
+    return pass.filter(function (s, r) { return r < (head || 20) || perConv[s.convUuid] >= 2; });
+  }
   /* Reciprocal Rank Fusion (pure, node-tested): array of ranked id lists → {id: fused score}.
      Standard K=60: rank 1 in one list ≈ 0.0164; present near the top of BOTH lists beats a solo
      #1 — exactly the behavior that fixes multi-proper-noun queries (semantic finds the meaning,
@@ -3770,7 +3786,10 @@
     var report = onProgress || function () {};
     var prog = function (p) {
       if (p && p.status === 'progress' && p.file && /\.onnx(_data)?$/.test(p.file)) {
-        report('Downloading model — ' + Math.round(p.progress || 0) + '%');
+        /* v1.56.0: "Loading", not "Downloading" — transformers.js emits the same progress events
+           when STREAMING FROM CACHE STORAGE (a 112 MB "download" that finishes in seconds is a cache
+           read; the old label made cache hits look like re-downloads — Eugen's catch) */
+        report('Loading model — ' + Math.round(p.progress || 0) + '%');
       }
     };
     semLoading = import(SEM.LIB).then(function (T) {

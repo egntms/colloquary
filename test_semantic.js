@@ -160,5 +160,19 @@ ok(hd2.count === 1 && hd2.o === 4 + 1 + 2 + 2 + new TextEncoder().encode(SEM.MOD
 var hErr = ''; try { cvecHeader(new ArrayBuffer(16)); } catch (e) { hErr = e.message; }
 ok(/Not a colloquary embeddings/.test(hErr), 'cvecHeader rejects bad magic by name');
 
+// --- v1.56.0 (§11 F2): semFoldFilter — corroboration gate on the flat e5 tail ---
+function fp(cu) { return { convUuid: cu }; }
+var fpass = [fp('a'), fp('b'), fp('a'), fp('c')].concat(
+  Array.from({ length: 30 }, function (_, i) { return fp(i % 2 ? 'a' : 'z' + i); }));
+var ff = semFoldFilter(fpass, 4);
+ok(ff.length === 4 + 15, 'fold gate: head kept whole + only corroborated (a×many) survive the tail');
+ok(ff.filter(function (s) { return /^z/.test(s.convUuid); }).length === 0, 'fold gate: singleton tail convs dropped');
+ok(ff[0].convUuid === 'a' && ff[1].convUuid === 'b', 'fold gate: order preserved');
+var fSingle = semFoldFilter([fp('x'), fp('y')], 20);
+ok(fSingle.length === 2, 'fold gate: everything inside the head passes untouched');
+var fCorr = semFoldFilter(Array.from({ length: 25 }, function (_, i) { return fp(i < 24 ? 'solo' + i : 'pair'); }).concat([fp('pair')]), 20);
+ok(fCorr.filter(function (s) { return s.convUuid === 'pair'; }).length === 2, 'fold gate: ≥2-passage conv survives beyond the head');
+ok(fCorr.filter(function (s) { return /^solo2[0-3]$/.test(s.convUuid); }).length === 0, 'fold gate: tail singletons beyond head dropped');
+
 console.log(checks - fails + '/' + checks + ' semantic checks passed');
 if (fails) process.exit(1);
