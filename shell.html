@@ -247,8 +247,8 @@ mark { background: var(--mark); padding: 0 .1em; border-radius: 1px; }
 #progress-label { font-family: var(--mono); font-size: .75rem; display: block; margin-bottom: .45rem; }
 #progress-track { height: 4px; background: rgba(255,255,255,.25); border-radius: 2px; }
 #progress-bar { height: 100%; width: 0; background: var(--mark); border-radius: 2px; transition: width .25s; }
-#progress-bar.indet { animation: indet 1.1s linear infinite; }
-@keyframes indet { 0% { margin-left: -40%; } 100% { margin-left: 100%; } } /* one-directional sweep — out-and-back read as "stuck at half" (v1.56.2) */
+#progress-bar.indet { width: 100% !important; animation: indet 1.4s ease-in-out infinite; } /* full-width BREATHE — any moving partial segment reads as a stuck fraction (v1.56.3, Eugen's two catches) */
+@keyframes indet { 0% { opacity: .3; } 50% { opacity: 1; } 100% { opacity: .3; } }
 
 #toast {
   position: fixed; top: 1rem; left: 50%; transform: translateX(-50%) translateY(-220%);

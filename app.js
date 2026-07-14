@@ -117,7 +117,7 @@
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.56.2'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.56.3'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -771,9 +771,11 @@
     if (!semExtractor) {
       if (!semReRunArmed) {
         semReRunArmed = true;
-        semLoad(function (s) { /* v1.56.0: the bar used to pin at 60 while the TEXT said 100% (Eugen's
-          catch); ride the real percent when one is present */
-          var m = /(\d+)\s*%/.exec(s); showProgress('Semantic: ' + s, m ? 55 + Math.min(45, +m[1] * 0.45) : 60);
+        var rrLast = null; /* v1.56.3 LATCH: non-% status lines between % events made the bar flip
+          indet↔determinate — read as "blinking" on the phone. Once a % is seen, never fall back. */
+        semLoad(function (s) { /* v1.56.0: ride the real percent when one is present */
+          var m = /(\d+)\s*%/.exec(s); if (m) rrLast = 55 + Math.min(45, +m[1] * 0.45);
+          showProgress('Semantic: ' + s, rrLast);
         }).then(
           function () { hideProgress(); semReRunArmed = false; runSearch(); },
           function (err) { hideProgress(); semReRunArmed = false; semFailed(err); }
@@ -4687,9 +4689,10 @@
         semDisabled = false; /* a manual opt-in retries a previously-failed load */
         /* pay the model-init cost NOW, visibly — not in slices between keystrokes (freeze fix) */
         showProgress('Semantic: loading…', null);
+        var tgLast = null; /* v1.56.3 latch — see the search-path reporter */
         Promise.all([
           semEnsureDocs(),
-          semLoad(function (s) { var m = /(\d+)\s*%/.exec(s); showProgress('Semantic: ' + s, m ? 55 + Math.min(45, +m[1] * 0.45) : null); })
+          semLoad(function (s) { var m = /(\d+)\s*%/.exec(s); if (m) tgLast = 55 + Math.min(45, +m[1] * 0.45); showProgress('Semantic: ' + s, tgLast); })
         ]).then(
           function (r) { hideProgress(); if (r[0]) runSearch(); },
           function (err) { hideProgress(); semFailed(err); syncSemToggle(); }
