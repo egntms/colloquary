@@ -36,9 +36,12 @@ A privacy tool you can't read is just a promise. This one you can check in about
   your technical footprint, each with a timeline.
 - **Token coach** — what your conversations actually cost in context: where the long chats are, which
   ones bloat, and where you'd have been better off starting fresh.
-- **Semantic search (opt-in)** — on-device embeddings (E5 or EmbeddingGemma via transformers.js /
-  ONNX Runtime Web) fold meaning-matches into keyword results. The model downloads once from this
-  site's own webroot; after that it's local too.
+- **Semantic search (opt-in, desktop)** — on-device embeddings (E5 or EmbeddingGemma via
+  transformers.js / ONNX Runtime Web) fold meaning-matches into keyword results. The model downloads
+  once from this site's own webroot; after that it's local too. Desktop-only, deliberately: iOS won't
+  grant a tab enough memory to hold the model session and the vectors alongside the archive, so it
+  reloads the page mid-search. Phones get keyword search over every word, browse, reader, stats and
+  entities — the compile surface needs the model, so it lives on the desktop too.
 - **Compile skills** — the payoff. Point a lens at your archive ("coding", "design", or any phrase)
   and it extracts your actual patterns — corrections, rituals, decisions, vocabulary — into an
   installable `.skill` (or plain Markdown, which works with any assistant). Every line is pulled
@@ -89,7 +92,8 @@ node test_query.js    # and test_router, test_semantic, test_entities, test_summ
 - **Search** is MiniSearch over an in-memory index built at load.
 - **Semantic** vectors live in a separate IndexedDB store, addressed by model, so you can switch
   models without losing anything. They can be exported as a `.cvec` file and imported on another
-  device — which is how you get semantic search on a phone without making the phone do the work.
+  computer, which skips re-embedding there. (That file used to carry vectors to a phone; the phone
+  could hold them but not run the query model, so semantic is desktop-only as of v1.58.0.)
 - **Skills** are compiled by scoping the archive with a semantic lens, then running extractive
   detectors over the scoped conversations.
 

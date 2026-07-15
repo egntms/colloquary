@@ -3401,7 +3401,7 @@ self.onmessage = function (e) {
   }
 
   /* ---------- Index ---------- */
-  var APP_VERSION = '1.57.4'; /* shown in the footer + the diagnostic report — bump per release */
+  var APP_VERSION = '1.58.0'; /* shown in the footer + the diagnostic report — bump per release */
   /* the public mirror (AGPL-3.0). It is the PROOF link for the local-only claim, not a badge:
      the served file IS the source (unminified), so "read it yourself" is a real invitation. */
   var SRC_URL = 'https://github.com/egntms/colloquary';
@@ -4023,7 +4023,10 @@ self.onmessage = function (e) {
   }
   function semAugment(out, titleOnly, groups, searchableGroups, raw, matchedSet, ignoredFilterGroup) {
     var seq = ++semSeq;
-    if (!state.semOn || semDisabled) return;
+    /* v1.58.0 — the one gate that matters: on a phone, ≈ never arms the model and never loads the
+       50 MB of vectors. state.semOn is already forced false at init, so this is belt-and-braces —
+       but it's the line that makes "no route drifts back in" true rather than hoped for. */
+    if (!state.semOn || semDisabled || semDeskOnly()) return;
     var semQ = searchableGroups.map(function (g) { return g.terms.concat(g.phrases).join(' '); }).join(' ').trim();
     if (semQ.length < 3) return;
     /* v1.50.2 (live-caught: iOS crash-loop at BOOT): vectors are no longer preloaded at init on
@@ -4033,7 +4036,10 @@ self.onmessage = function (e) {
        the whole site. */
     /* v1.57.2 (recorder-proven: 18:26:28 model load START → :29 ABRUPT boot): on iOS the wasm
        instantiate spike landing ON TOP of the ~50 MB resident vectors is what gets the tab killed.
-       Arm the MODEL FIRST — the spike happens while memory is still light; vectors follow. */
+       Arm the MODEL FIRST — the spike happens while memory is still light; vectors follow.
+       DEAD SINCE v1.58.0 — the semDeskOnly() guard above returns before this can run. Kept (not
+       ripped out) on purpose: the removal is its own build with its own smoke. Do not wire new
+       behaviour into it — it is unreachable. */
     if (isIOS() && !semExtractor) {
       if (!semReRunArmed) {
         semReRunArmed = true;
@@ -6436,11 +6442,11 @@ self.onmessage = function (e) {
       '<line class="hm-l" x1="180" y1="354" x2="180" y2="374"/>' +
       '<text class="hm-m" x="192" y="370">unlocks</text>' +
       '<rect class="hm-b" x="8" y="376" width="344" height="96" rx="2"/>' +
-      '<text class="hm-t" x="20" y="398">4 · semantic — opt-in</text>' +
+      '<text class="hm-t" x="20" y="398">4 · semantic — opt-in, on a computer</text>' +
       '<text class="hm-s" x="20" y="414">one local model download → your archive</text>' +
       '<text class="hm-s" x="20" y="430">embedded as vectors, on-device</text>' +
       '<text class="hm-m" x="20" y="446">≈ hybrid search · model: e5 or Gemma</text>' +
-      '<text class="hm-m" x="20" y="462">embeddings → one .cvec file → phone</text>' +
+      '<text class="hm-m" x="20" y="462">phones: keyword search, stats, reader</text>' +
       '<line class="hm-l" x1="180" y1="472" x2="180" y2="492"/>' +
       '<rect class="hm-b" x="8" y="494" width="344" height="96" rx="2"/>' +
       '<text class="hm-t" x="20" y="516">5 · compile</text>' +
@@ -6473,9 +6479,9 @@ self.onmessage = function (e) {
       '<text class="hm-m" x="36" y="237">Make me.skill works from here — no AI model needed</text>' +
       '<line class="hm-l" x1="320" y1="244" x2="320" y2="264"/>' +
       '<rect class="hm-b" x="20" y="266" width="600" height="60" rx="2"/>' +
-      '<text class="hm-t" x="36" y="288">4 · semantic — opt-in</text>' +
+      '<text class="hm-t" x="36" y="288">4 · semantic — opt-in, on a computer</text>' +
       '<text class="hm-s" x="36" y="305">one local model download → your archive embedded as vectors, on-device</text>' +
-      '<text class="hm-m" x="36" y="319">≈ hybrid search · model: e5 or Gemma · embeddings → one .cvec file → phone</text>' +
+      '<text class="hm-m" x="36" y="319">≈ hybrid search · model: e5 or Gemma · phones keep keyword search, stats, reader</text>' +
       '<line class="hm-l" x1="320" y1="326" x2="320" y2="346"/>' +
       '<text class="hm-m" x="332" y="342">unlocks</text>' +
       '<rect class="hm-b" x="20" y="348" width="600" height="60" rx="2"/>' +
@@ -6537,8 +6543,8 @@ self.onmessage = function (e) {
       '<li><strong>Token coach</strong> \u2014 track your token usage/spend by month and find waste: messages you retype across chats, files you re-upload, and rework loops (why an assistant keeps forgetting your code, or you keep repeating instructions). It suggests what to move into a skill or CLAUDE.md so you stop re-sending context and re-uploading files. Rough ~chars\u00f74 estimates, all local.</li>' +
       '<li><strong>Entities</strong> \u2014 your technical footprint: the domains, servers (IPs), repos and file paths recurring across the archive, each with counts and a first-seen \u2192 last-seen range. Click one to see every context where you touched it. Extracted with plain patterns, never inferred \u2014 no people, no emails. All local.</li>' +
       '<li><strong>Download archive</strong> \u2014 saves your whole archive (Claude + Code + Cowork) as one local <code>.zip</code>: all message text and text attachments (pasted content, lab results, logs). Binary files like PDFs and images are not included \u2014 the Claude export never carries their bytes, only names. Drop it back onto colloquary here or on another device (your phone is the only way to get Code/Cowork chats there) to import it all. Local download; nothing is uploaded.</li>' +
-      '<li><strong>Semantic search</strong> \u2014 an opt-in AI model (self-hosted here) that also finds messages by MEANING, not just keywords; the \u2248 toggle by the search bar folds those matches into your results. Embedding a whole archive is heavy, so phones can\u2019t do it \u2014 instead, on a desktop run <strong>Semantic search</strong>, then <strong>Download embeddings</strong> (one ~50 MB <code>.cvec</code> file), move it to your phone (AirDrop/cloud), import your archive there, and use <strong>Import embeddings</strong>. Then \u2248 works on the phone \u2014 only a live search downloads the model once. The phone follows the .cvec you import \u2014 use <strong>e5</strong> (~118 MB model): it\u2019s the one that runs on phones (the Gemma model\u2019s operator isn\u2019t supported by the phone runtime today; if you import a Gemma .cvec anyway, the app offers the way back to e5).</li>' +
-      '<li><strong>Semantic model</strong> \u2014 (desktop) switch the embedding model behind semantic search: <strong>e5</strong> (default) or <strong>EmbeddingGemma</strong>, which matches meaning noticeably more sharply. Switching to Gemma is a one-time ~190 MB self-hosted download plus a re-embed of your archive (roughly an hour \u2014 resumable, it continues where it stopped if you close the tab). Your e5 vectors are kept, so switching back is instant. Search, Compile and Suggest all run on whichever model is active — each has its own calibrated thresholds.</li>' +
+      '<li><strong>Semantic search</strong> \u2014 (computer only) an opt-in AI model (self-hosted here) that also finds messages by MEANING, not just keywords; the \u2248 toggle by the search bar folds those matches into your results. It runs on a computer, not a phone: an iPhone can\u2019t hold the model and your vectors at once, and Safari reloads the tab mid-search \u2014 so rather than half-work, it\u2019s honestly not offered there. Your phone keeps keyword search over every word of every chat, plus browse, stats, entities and the reader.</li>' +
+      '<li><strong>Semantic model</strong> \u2014 (computer only) switch the embedding model behind semantic search: <strong>e5</strong> (default) or <strong>EmbeddingGemma</strong>, which matches meaning noticeably more sharply. Switching to Gemma is a one-time ~190 MB self-hosted download plus a re-embed of your archive (roughly an hour \u2014 resumable, it continues where it stopped if you close the tab). Your e5 vectors are kept, so switching back is instant. Search, Compile and Suggest all run on whichever model is active — each has its own calibrated thresholds.</li>' +
       '<li><strong>Clear local data</strong> \u2014 deletes this browser\u2019s archive. Your exports and claude.ai are untouched.</li></ul>');
     h.push('<h3>Privacy</h3>' +
       '<p>Everything stays in this browser (IndexedDB) on this device \u2014 no uploads, no analytics, works offline after first load. The archive is per-browser and per-device: importing on your laptop does not populate your phone. To move it, use <strong>Download archive</strong> and drop the .zip onto colloquary on the other device \u2014 still all local, nothing uploaded.</p>');
@@ -6611,7 +6617,7 @@ self.onmessage = function (e) {
       '<li><strong>I said it \u2014 or the AI did.</strong> <code>from:me deadline</code> vs <code>from:claude deadline</code>.</li>' +
       '<li><strong>It was in ChatGPT, not Claude.</strong> <code>source:chatgpt</code> \u2014 or click the chips above the results; chips COMBINE (e.g. cowork + code), <em>all</em> clears.</li>' +
       '<li><strong>It was a work session in some project.</strong> <code>folder:"my-project"</code> scopes Code/Cowork sessions by working folder (\ud83d\udcc1 chips do the same).</li>' +
-      '<li><strong>I only remember the idea, not the words.</strong> Turn on Semantic search once, then the <code>\u2248</code> toggle: \u201cthat chat about negotiating rent\u201d finds \u201cthe landlord wants 200 more\u201d \u2014 meaning, not keywords. Matches found this way are marked <code>\u2248</code>.</li>' +
+      '<li><strong>I only remember the idea, not the words.</strong> Turn on Semantic search once, then the <code>\u2248</code> toggle: \u201cthat chat about negotiating rent\u201d finds \u201cthe landlord wants 200 more\u201d \u2014 meaning, not keywords. Matches found this way are marked <code>\u2248</code>. (Computer only \u2014 it needs an AI model a phone can\u2019t hold.)</li>' +
       '<li><strong>It was in another language.</strong> Keyword search works in ANY language (accents ignored: <code>sapa</code> finds <code>\u0218apa</code>, <code>uber</code> finds <code>\u00fcber</code>). Semantic search understands 100+ languages and matches across them \u2014 search in one language, find the chat you had in another.</li>' +
       '<li><strong>Too many results.</strong> Exclude with <code>-word</code> (<code>tax -crypto</code>), allow alternatives with <code>OR</code> (<code>invoice OR factur\u0103</code>), then <strong>Find</strong> (\u2318/Ctrl+F) steps through matches inside the open chat.</li>' +
       '<li><strong>I keep coming back to the same search.</strong> Pin it: recent \u25be \u2192 \ud83d\udccc. Pin whole conversations too \u2014 they float to the top of browsing.</li></ul>');
@@ -6627,7 +6633,8 @@ self.onmessage = function (e) {
       '<li><strong>Can you see my searches or archive?</strong> No. Nothing phones home; there are no analytics. The server sees only standard access logs for static files. Details: the privacy page.</li>' +
       '<li><strong>How do I delete everything?</strong> Top bar \u2192 <strong>Clear data</strong> \u2014 wipes the archive AND semantic vectors from this browser. Your exports and accounts are untouched.</li>' +
       '<li><strong>Does it work offline?</strong> Yes, after first load.</li>' +
-      '<li><strong>Can I use it on my phone?</strong> Yes: <strong>Download archive</strong> \u2192 one .zip \u2192 open colloquary on the phone and drop it there. For semantic on the phone: embed on desktop \u2192 <strong>Download embeddings</strong> (.cvec) \u2192 <strong>Import embeddings</strong> on the phone. Use an <strong>e5</strong> .cvec \u2014 e5 (~118 MB model) is the one that runs on phones (Gemma\u2019s model doesn\u2019t load on iOS today; the app says so and offers the way back). One iOS habit to know: when Safari reclaims a background tab it may also clear the downloaded model, so the next \u2248 search downloads it again \u2014 colloquary asks iOS for persistent storage (the self-test shows whether it was granted), and adding the site to your Home Screen can help iOS keep it.</li>' +
+      '<li><strong>Can I use it on my phone?</strong> Yes, for everything except semantic: <strong>Download archive</strong> \u2192 one .zip \u2192 open colloquary on the phone and drop it there. You get keyword search across every word of every chat, browse, the reader, stats, entities, summaries and export. <strong>Semantic search (\u2248) and Compile are computer-only</strong> \u2014 see the next answer.</li>' +
+      '<li><strong>Why isn\u2019t semantic search on my iPhone?</strong> Because it can\u2019t be honest there. Semantic needs the AI model and your vectors resident at the same time, on top of your archive \u2014 more than iOS grants a Safari tab, so it reloads the page mid-search. It was offered on phones for a while (import a .cvec made on your computer) and it genuinely half-worked: the import succeeds, then the first search reloads the tab. Adding the site to the Home Screen doesn\u2019t change it. A feature that fails at the moment you use it is worse than one that lives somewhere clear, so it now runs on computers only. The same goes for Compile / Suggest \u2014 they select passages by meaning, so they need the same model.</li>' +
       '<li><strong>Why is the semantic download large (~120\u2013240 MB)?</strong> That IS the AI model, served from this domain and run on your device \u2014 the price of nothing leaving your browser. One-time.</li>' +
       '<li><strong>Is it open source? Can I verify any of this?</strong> Yes, and please do \u2014 that\u2019s why the code ships readable. The page you\u2019re on <em>is</em> the source (one unminified HTML file: View Source). Same code at <a href="' + SRC_URL + '" target="_blank" rel="noopener">github.com/egntms/colloquary</a> (AGPL-3.0). Two more checks: DevTools \u2192 Network while you use it (nothing goes out), or just go offline and keep working.</li></ul>');
     h.push('<h3>Skills & compile</h3><ul>' +
@@ -6640,7 +6647,7 @@ self.onmessage = function (e) {
       '<li><strong>Some files say \u201cname only\u201d.</strong> The export never carried their bytes \u2014 only names. Pasted/extracted text is fully searchable; uploaded binaries aren\u2019t reopenable anywhere, including the original app.</li>' +
       '<li><strong>\u2197 can\u2019t jump to the exact message.</strong> claude.ai has no message anchors; the reader here IS the workaround. Cowork sessions have no external link at all.</li>' +
       '<li><strong>No model name on claude.ai chats.</strong> That export omits it; ChatGPT and Code/Cowork chats show theirs.</li>' +
-      '<li><strong>iPhones can\u2019t embed the archive.</strong> iOS kills the tab under model memory pressure \u2014 use the desktop \u2192 .cvec \u2192 phone flow above.</li></ul>');
+      '<li><strong>Semantic search and Compile don\u2019t run on iPhones.</strong> iOS kills the tab under model memory pressure \u2014 measured, fought for eight releases, and honestly given up on. Everything else works there; the \u2248 and Compile surfaces live on your computer.</li></ul>');
     h.push('<p>Something missing here? <a href="mailto:hello@colloquary.com?subject=colloquary%20FAQ">Tell me</a> \u2014 this page grows from real questions.</p>');
     h.push(pageLinksHtml('faq'));
     openPage('FAQ', 'real searches, honest answers', h.join(''));
@@ -7051,6 +7058,37 @@ self.onmessage = function (e) {
       });
     });
   }
+  /* v1.58.0 — count vectors across EVERY registered model, not just the active one: a phone that
+     followed the old "the phone follows the .cvec you import" rule can be holding both e5 and gemma
+     rows, and the gemma ones would be invisible to a plain semVecCount(). */
+  function semPhoneVecScan() {
+    var ks = Object.keys(SEM_MODELS);
+    return Promise.all(ks.map(function (k) { return semVecCount(SEM_MODELS[k].MODEL_KEY); })).then(function (cs) {
+      var n = 0, bytes = 0, hit = [];
+      for (var i = 0; i < ks.length; i++) {
+        if (!cs[i]) continue;
+        n += cs[i]; bytes += cs[i] * SEM_MODELS[ks[i]].DIMS * 4; hit.push(ks[i]);
+      }
+      return { n: n, mb: bytes / 1048576, keys: hit };
+    });
+  }
+  /* v1.58.0 — vectors imported by an earlier version are now dead weight on a phone: nothing will
+     ever read them, and 12–50 MB of origin storage is exactly the pressure that makes iOS purge the
+     things you DO use. Offer them back — explicit confirm, never a silent delete of user data. */
+  function semPhoneVecFree() {
+    return semPhoneVecScan().then(function (r) {
+      if (!r.n) { toast('No semantic vectors are stored on this phone.'); return; }
+      var mb = r.mb.toFixed(0);
+      if (!confirm(SEM_DESK_WHY + '\n\n' + r.n.toLocaleString() + ' vectors (~' + mb + ' MB) imported here by an earlier version are no longer used by anything.\n\nDelete them to free the space?\n\nYour archive, your searches and your pins are not affected — and you can import a .cvec again anytime if this ever changes.')) return;
+      return Promise.all(r.keys.map(function (k) { return semVecDeleteModel(SEM_MODELS[k].MODEL_KEY); })).then(
+        function () {
+          semRun.docs = null; semRun.vecs = null;
+          toast('Freed ~' + mb + ' MB (' + r.n.toLocaleString() + ' unused vectors). Your archive is untouched.');
+        },
+        function () { toast('Could not delete those vectors — try again.', true); }
+      );
+    });
+  }
 
   /* --- export/import the vector store as ONE portable binary file (.cvec) so a phone gets semantic
      search WITHOUT embedding 32k docs locally (which OOM-reloads iOS Safari). The heavy work stays on
@@ -7158,6 +7196,11 @@ self.onmessage = function (e) {
      found parked on Eugen's iPhone (pre-07-09 residue iOS never purged, while it DID evict his
      vectors twice). Used by the self-test's free-space offer. */
   function semCacheUsableFiles() {
+    /* v1.58.0 — semantic is desktop-only, so on a phone NO model file can ever load again: every
+       cached .onnx is dead weight (Eugen's iPhone was holding 113 MB of it). Returning just the
+       tokenizer makes the self-test's existing free-space offer reclaim the lot — the prune needed
+       no new code, only an honest answer to "what can this device load?". */
+    if (semDeskOnly()) return ['tokenizer.json'];
     var names = ['tokenizer.json'];
     Object.keys(SEM_MODELS).forEach(function (k) {
       var M = SEM_MODELS[k];
@@ -7202,6 +7245,24 @@ self.onmessage = function (e) {
     var ua = navigator.userAgent || '';
     return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   }
+  /* ---------- v1.58.0 — SEMANTIC IS DESKTOP-ONLY (Eugen's call, 2026-07-15) ----------
+     Eight versions fought iOS for semantic search (v1.50.0 boot crash-loop → v1.50.3 lazy arm →
+     v1.52.x gemma NO → v1.55.2 cache visibility → v1.57.2 model-first arm + query restore →
+     v1.57.4 vector delete), and the flight recorder ended the argument: it is not a bug, it is
+     TOTAL RESIDENCY — the model session + ~50 MB of f32 vectors + the archive/index exceed what
+     iOS grants a tab, so Safari kills it mid-search. The last hypothesis died on 2026-07-15:
+     Add to Home Screen (which grants persistent storage far more readily) reloads exactly the
+     same. int8 vectors would have bought ~37 MB against a ~10% overshoot — a delay, not a fix.
+     So the phone stops pretending. What it keeps is the product: keyword search over every word,
+     browse, reader, stats, entities, summary, dossier, pins, export. What moves to the computer
+     is semantic — and the compile surface with it, because Compile / Suggest / custom lens all
+     embed a phrase, which needs the model that doesn't fit.
+     ONE predicate so no route can drift back in; desktop is untouched by construction. */
+  function semDeskOnly() { return isIOS(); }
+  /* the honest why, in one sentence — every blocked entry point says the same thing (a feature that
+     "sometimes works" is worse than one that's honestly elsewhere) */
+  var SEM_DESK_WHY = 'Semantic search runs on your computer. An iPhone can’t hold the model and your vectors at the same time — Safari reloads the tab mid-search, so offering it here would be a promise the phone can’t keep.';
+  var SEM_DESK_OK = 'On this phone, search still reads every word of every chat — browse, stats, entities and the reader all work as usual.';
 
   /* Loads transformers.js + the model: webgpu first, wasm fallback — a shipped feature must never
      be able to crash the machine (GOTCHA: 300M model @ webgpu batch 32 killed WindowServer).
@@ -7380,6 +7441,11 @@ self.onmessage = function (e) {
      from the store. The model is NOT loaded unless something new needs embedding — the all-cached
      path never touches the network. */
   function semEnsureDocs() {
+    /* v1.58.0 — the backstop. Since v1.52.0 this was the ONE choke point enforcing "phones never
+       EMBED"; it now enforces the stronger rule "phones never touch vectors at all". Every caller
+       is guarded already — this line is what makes that a property of the code instead of a claim
+       about the call graph, and it's where a future feature that forgets will land safely. */
+    if (semDeskOnly()) return Promise.resolve(false);
     if (semRun.docs) return Promise.resolve(true);
     if (semRun.busy) return Promise.resolve(false);
     return semVecCount().then(function (n) {
@@ -7802,6 +7868,9 @@ self.onmessage = function (e) {
   /* top-bar "Suggest skills": rank the richest lenses, then render clickable proposals. Needs vectors. */
   function openSuggest() {
     if (!state.convs.size) { toast('Import an archive first — Suggest skills reads from it.', true); return; }
+    /* v1.58.0 — Suggest ranks topics by MEANING, which means embedding 15 seed phrases, which means
+       the model: desktop-only since semantic is. Say where it lives, not "turn on X" (X is gone). */
+    if (semDeskOnly()) { toast('Suggest skills runs on your computer — it ranks your topics by meaning, which needs the model an iPhone can’t hold. Your archive is already there if you imported it.', true); return; }
     semVecCount().then(function (n) {
       if (!n) { toast('Turn on Semantic search first (top bar) — Suggest skills ranks your topics by MEANING.', true); return; }
       showProgress('Finding the richest skills in your archive…', 8);
@@ -7845,7 +7914,10 @@ self.onmessage = function (e) {
      once per page load so re-imports don't nag. */
   var suggestNudged = false;
   function suggestNudge() {
-    if (suggestNudged) return;
+    /* v1.58.0 — never nudge a phone toward a desktop-only surface (it can't fire there anyway: the
+       nudge needs vectors, which phones no longer hold — but an onboarding toast that leads
+       nowhere is the worst kind of dead end, so the rule is explicit rather than incidental) */
+    if (suggestNudged || semDeskOnly()) return;
     semVecCount().then(function (n) {
       if (!n) return;
       semSuggest(function () {}).then(function (props) {
@@ -7864,6 +7936,11 @@ self.onmessage = function (e) {
   /* incremental embed after an import that added/changed convs — only runs if the user opted in
      (vectors exist). Cached docs skip; only genuinely new text is embedded. */
   function semAfterImport() {
+    /* v1.58.0 (caught reviewing the v1.58.0 diff itself): this fires straight after an archive
+       import — the heaviest memory moment a phone has — and the iOS branch below pulled ~50 MB of
+       vectors into RAM via semRebuildFromStore. Every OTHER route was guarded and this one would
+       still have loaded them. Semantic is desktop-only; a phone has nothing to rebuild here. */
+    if (semDeskOnly()) return;
     semVecCount().then(function (n) {
       if (!n || semRun.busy) return;
       semRun.docs = null; semRun.vecs = null;
@@ -8049,6 +8126,19 @@ self.onmessage = function (e) {
       } else {
         renderStats(); runSearch();
       }
+      /* v1.58.0 — phones: semantic is desktop-only, so the ≈ chip never appears, no vectors ever
+         load, and the eviction diagnostics below are skipped (they'd now be noise about a feature
+         this device doesn't have — the "your vectors were removed" toast was true and useless).
+         Whatever an earlier version imported here is offered back as free space instead. */
+      if (semDeskOnly()) {
+        if (state.semOn) { state.semOn = false; setMeta('semOn', false); }
+        semPhoneVecScan().then(function (r) {
+          if (!r.n) return;
+          toast('Semantic search now runs on your computer — the ' + r.n.toLocaleString() + ' vectors stored on this phone (~' + r.mb.toFixed(0) + ' MB) are unused. TAP THIS MESSAGE to free the space.', true);
+          state._toastAction = semPhoneVecFree; /* armed AFTER the toast (the stale-action rule) */
+        });
+        return;
+      }
       /* the ≈ toggle exists only once vectors do (task 6); vectors load into memory only if the
          user left hybrid ON — otherwise page load stays byte-for-byte pre-v1.29 */
       semVecCount().then(function (n) {
@@ -8161,8 +8251,13 @@ self.onmessage = function (e) {
       w.classList.toggle('open', open);
       $('#topbar').setAttribute('aria-expanded', open ? 'true' : 'false');
     }
-    /* Save the vector store to a .cvec file (desktop) → AirDrop/cloud → import on the phone. */
+    /* Save the vector store to a .cvec file — a backup, or a way to skip re-embedding on a second
+       computer. (Until v1.58.0 this file's purpose was the phone; that flow is retired.) */
     function downloadEmbeddings() {
+      /* v1.58.0 (second diff-review catch): on a phone with un-cleaned vectors this read the WHOLE
+         store into memory via semExportBlob → semVecLoadAll — the exact 50 MB load the release
+         exists to prevent, reachable from a menu item nobody guarded. */
+      if (semDeskOnly()) { toast(SEM_DESK_WHY + ' There are no embeddings here to save.', true); return; }
       semVecCount().then(function (n) {
         if (!n) { toast('No embeddings yet — run “Semantic search” first (best on a desktop) to create them.', true); return; }
         showProgress('Preparing embeddings…', 40);
@@ -8173,7 +8268,9 @@ self.onmessage = function (e) {
           a.download = 'colloquary-embeddings-' + SEM.KEY + '-' + new Date().toISOString().slice(0, 10) + '.cvec'; /* content+date naming rule; model in the name since v1.44.0 */
           document.body.appendChild(a); a.click();
           setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-          toast(r.count + ' embeddings saved (' + (r.blob.size / 1048576).toFixed(0) + ' MB). On your phone: open colloquary → import your archive → “Import embeddings”.');
+          /* v1.58.0: the old copy sent this file to a phone — the flow semantic-on-mobile was built
+             around, and the one we retired. It's now a backup / move-to-another-computer file. */
+          toast(r.count + ' embeddings saved (' + (r.blob.size / 1048576).toFixed(0) + ' MB) — a backup, or import it on another computer to skip re-embedding there.');
         }).catch(function (e) { hideProgress(); toast('Export failed: ' + ((e && e.message) || e), true); });
       });
     }
@@ -8181,6 +8278,9 @@ self.onmessage = function (e) {
        semantic search works; only a live QUERY loads the model. Archive must be imported first so the
        content-hash keys line up (native archive import is byte-preserving, so hashes match). */
     function importEmbeddings(file) {
+      /* v1.58.0 — second lock on the same door: the menu action is guarded, but #vec-input is a DOM
+         node any future code (or a stale open dialog) could fire. Vectors must not land on a phone. */
+      if (semDeskOnly()) { toast(SEM_DESK_WHY + ' Embeddings imported here would sit unused.', true); return; }
       if (!state.convs.size) { toast('Import your archive first, then the embeddings.', true); return; }
       showProgress('Reading embeddings…', 20);
       file.arrayBuffer().then(function (buf) {
@@ -8242,6 +8342,9 @@ self.onmessage = function (e) {
          extractive brief. Needs the semantic vectors (opt-in). Preview + Save-PDF like the summaries. */
       compile: function () {
         if (!state.convs.size) { toast('Import an archive first — Compile distills from it.', true); return; }
+        /* v1.58.0 — desktop-only for the same reason as ≈: selecting passages by meaning embeds the
+           phrase, which loads the model, which is the exact thing that kills the tab here. */
+        if (semDeskOnly()) { toast('Compile a topic runs on your computer — it selects passages by meaning, which needs the model an iPhone can’t hold. ' + SEM_DESK_OK, true); return; }
         if (!SEM.CAL) { toast('Compile is calibrated for e5 — switch the semantic model back to e5 (top bar → Semantic model). Gemma calibration is the next update.', true); return; }
         semVecCount().then(function (n) {
           if (!n) { toast('Turn on Semantic search first (top bar) — Compile selects passages by MEANING.', true); return; }
@@ -8294,6 +8397,9 @@ self.onmessage = function (e) {
          the on-topic conversations and render a recipe-framed .skill. Needs the semantic vectors. */
       compileskill: function () {
         if (!state.convs.size) { toast('Import an archive first — Compile-a-skill distills from it.', true); return; }
+        /* v1.58.0 — desktop-only (the lens embed needs the model). Compiling a skill is a
+           sit-at-a-desk act anyway — the .skill it produces gets installed on a computer. */
+        if (semDeskOnly()) { toast('Compile a skill runs on your computer — it selects the topic by meaning, which needs the model an iPhone can’t hold. Open colloquary there with the same archive.', true); return; }
         semVecCount().then(function (n) {
           if (!n) { toast('Turn on Semantic search first (top bar) — Compile-a-skill selects the topic by MEANING.', true); return; }
           var raw = (window.prompt('Compile a skill — a preset (coding, design, writing), any phrase, or merge 2–3 with "+" (e.g. coding + design):', 'coding') || '').trim();
@@ -8314,7 +8420,12 @@ self.onmessage = function (e) {
       },
       suggest: openSuggest,
       semdownload: downloadEmbeddings,
-      semimport: function () { $('#vec-input').click(); },
+      /* v1.58.0 — importing a .cvec here would succeed and then help nothing: the vectors would sit
+         unread while adding the storage pressure that makes iOS purge what you do use. */
+      semimport: function () {
+        if (semDeskOnly()) { toast(SEM_DESK_WHY + ' Embeddings imported here would sit unused.', true); return; }
+        $('#vec-input').click();
+      },
       /* v1.44.0 — semantic model switcher: e5 (default, calibrated) ⇄ EmbeddingGemma MRL-256d
          (2026-07-10 on-device bench: doc·seed IQR 0.114 vs e5 0.025 — much sharper meaning
          separation; ~86 min one-time re-embed, resumable by construction: the content-addressed
@@ -8322,20 +8433,10 @@ self.onmessage = function (e) {
          SEARCH-ONLY until v1.44.1 recalibrates the Compile/Suggest gates in gemma space. */
       semmodel: function () {
         if (!state.convs.size) { toast('Import an archive first.', true); return; }
-        if (isIOS()) {
-          /* v1.52.0: manual escape hatch — after a gemma import (or a crash the page couldn't
-             catch), the way back must not require a new .cvec. Synchronous confirm — no toast
-             action, no staleness. */
-          if (SEM.KEY !== 'e5') {
-            semVecCount(SEM_MODELS.e5.MODEL_KEY).then(function (n5) {
-              if (n5 && confirm('This phone is on ' + SEM.LABEL + '. Switch semantic search back to e5-small?\n\nIts vectors are still stored here — the switch is instant.')) { semBackToE5(); return; }
-              toast('This phone follows the .cvec you import — currently on ' + SEM.LABEL + '. To change models, import a .cvec made with the other model (the filename carries it: “-e5-” or “-gemma256-”).', true);
-            });
-            return;
-          }
-          toast('This phone follows the .cvec you import — currently on ' + SEM.LABEL + '. To change models, import a .cvec made with the other model (the filename carries it: “-e5-” or “-gemma256-”).', true);
-          return;
-        }
+        /* v1.58.0 — nothing to choose between when no model runs here. (This replaces the v1.52.0
+           iOS escape hatch: its whole job was getting a phone off gemma and back onto e5 so
+           semantic worked again — a question that no longer exists.) */
+        if (semDeskOnly()) { toast(SEM_DESK_WHY, true); return; }
         if (semRun.busy) { toast('An embedding run is in progress — let it finish (or close and reopen the tab), then switch.', true); return; }
         var toKey = SEM.KEY === 'e5' ? 'gemma256' : 'e5';
         var to = SEM_MODELS[toKey];
@@ -8423,23 +8524,15 @@ self.onmessage = function (e) {
          clicked the app never fetches a byte of model. Re-running later = incremental update. */
       semantic: function () {
         if (!state.convs.size) { toast('Import an archive first — semantic search needs your conversations.'); return; }
-        /* v1.50.0: embedding an archive is NOT viable on a phone (hours of single-thread wasm, and
-           Safari kills the tab) — the old path let the user start it anyway and read as a freeze
-           (Eugen's iPhone, 2026-07-12). Error prevention over error messages: on iOS this action
-           TEACHES the working flow instead of starting the impossible one. */
-        if (isIOS()) {
-          /* v1.50.1 (live-caught): once a .cvec IS imported, this action must not re-lecture — its
-             job is done; just make sure hybrid is on and say so. The teaching alert is only for the
-             no-vectors state. */
-          semVecCount().then(function (n) {
-            if (n) {
-              state.semOn = true; setMeta('semOn', true);
-              $('#sem-toggle').hidden = false; syncSemToggle();
-              runSearch(); /* v1.50.2: vectors load lazily at the first ≈ search (memory discipline on iOS) */
-              toast('Semantic is ready on this phone — ' + n.toLocaleString() + ' vectors imported (' + SEM.LABEL + ') and “≈ semantic” is ON. Just search. To update after new chats, import a fresh .cvec.');
-            } else {
-              alert('Embedding your archive needs a computer — on this phone it would take hours and Safari may stop the tab.\n\nOn your computer:\n1. open colloquary and import your archive\n2. run Semantic search (embeds once)\n3. Download embeddings — one .cvec file\n4. send the file to this phone (AirDrop) and use Import embeddings here\n\nOnly the vectors travel — nothing leaves your devices.');
-            }
+        /* v1.58.0 — the v1.50.0 branch that used to live here TAUGHT the desktop → .cvec → phone
+           flow. The teaching worked; the flow didn't. The phone imports the vectors fine and then
+           Safari kills the tab on the first ≈ search, because the model + the vectors + the archive
+           don't fit at once. So this action now states the truth instead of routing the user into a
+           dead end — and hands back the storage the old advice left behind. */
+        if (semDeskOnly()) {
+          semPhoneVecScan().then(function (r) {
+            if (r.n) { semPhoneVecFree(); return; } /* its confirm carries the why + frees the space */
+            alert(SEM_DESK_WHY + '\n\nOn your computer:\n1. open colloquary and import your archive\n2. run Semantic search (embeds once, locally)\n3. search by meaning — and compile skills from it\n\n' + SEM_DESK_OK);
           });
           return;
         }
